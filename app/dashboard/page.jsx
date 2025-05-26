@@ -77,9 +77,9 @@ export default function Dashboard() {
 
   const PieChartData = [
     { type: "Critical", count: 100, fill: "var(--color-critical)", bg: PieChartConfig.critical.color },
-    { type: "Warning", count: 100, fill: "var(--color-warning)", bg: PieChartConfig.warning.color },
+    { type: "Warnings", count: 100, fill: "var(--color-warning)", bg: PieChartConfig.warning.color },
     { type: "Highpriority", count: 55, fill: "var(--color-highpriority)", bg: PieChartConfig.highpriority.color },
-    { type: "Info", count: 70, fill: "var(--color-info)", bg: PieChartConfig.info.color }
+    { type: "Information", count: 70, fill: "var(--color-info)", bg: PieChartConfig.info.color }
   ]
 
   const progressBarData = {
@@ -190,7 +190,7 @@ export default function Dashboard() {
   return (
     <div className='flex min-h-screen flex-col'>
       <motion.div
-        className='flex-1 p-6 pt-4 overflow-y-auto'
+        className='flex-1 p-6 pt-0 overflow-y-auto'
         variants={containerVariants}
         initial='hidden'
         animate='visible'

@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
-import useAlertStore from '@/lib/store' // Import the Zustand store
+import useAlertStore from '@/lib/store' // Adjust path if necessary
 import { Badge } from '@/components/ui/badge'
 import { Label, Pie, PieChart } from 'recharts'
 import {
@@ -21,18 +21,16 @@ import { OctagonAlert } from 'lucide-react'
 
 const CustomPieChart = ({ chartConfig, chartData }) => {
   const router = useRouter()
-  const { setSelectedAlertType } = useAlertStore() // Use the store
+  const { setSelectedAlertType, selectedAlertType } = useAlertStore()
 
   const totalVisitors = React.useMemo(() => {
     return chartData.reduce((acc, curr) => acc + curr.count, 0)
   }, [chartData])
 
-  // Handle click on a pie chart slice
   const handleSliceClick = (data) => {
     if (data && data.type) {
-      // Store the selected type in the Zustand store
       setSelectedAlertType(data.type)
-      // Navigate to /dashboard/alerts without query parameters
+      console.log('Pie Chart Filter Applied:', { selectedAlertType: data.type })
       router.push('/dashboard/alerts')
     }
   }

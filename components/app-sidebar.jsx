@@ -13,7 +13,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar"
-import { LayoutDashboard, FileText, FileUser, MonitorCog, FolderKey, Folder, Users, Settings, Plus } from "lucide-react"
+import { LayoutDashboard, BellRing, FileUser, MonitorCog, FolderKey, Folder, Users, Settings, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { LogoFill } from "./ui/Logo"
@@ -31,9 +31,15 @@ export function AppSidebar() {
       color: "text-primary-customized",
     },
     {
+      title: "Alerts",
+      icon: BellRing,
+      href: "/dashboard/alerts",
+      color: "text-primary-customized",
+    },
+    {
       title: "User Reports",
       icon: FileUser,
-      href: "/reports",
+      href: "/dashboard/user-reports",
       color: "text-primary-customized",
     },
     {
