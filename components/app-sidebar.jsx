@@ -43,21 +43,21 @@ export function AppSidebar() {
       color: "text-primary-customized",
     },
     {
-      title: "System Log",
-      icon: MonitorCog,
-      href: "/system-log",
-      color: "text-primary-customized",
-    },
-    {
       title: "Secure Folder",
       icon: FolderKey,
-      href: "/secure-folder",
+      href: "/dashboard/secure-folder",
       color: "text-primary-customized",
     },
     {
       title: "User Summary",
       icon: Users,
       href: "/user-summary",
+      color: "text-primary-customized",
+    },
+        {
+      title: "System Log",
+      icon: MonitorCog,
+      href: "/system-log",
       color: "text-primary-customized",
     },
     {

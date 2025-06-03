@@ -18,6 +18,7 @@ const config: Config = {
 			title : '#141414',
 			specialbg : '#CEC9FF',
 			specialGreen : '#94D058',
+			specialBlue : '#0033ff',
 			subtitle : '#525252',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
