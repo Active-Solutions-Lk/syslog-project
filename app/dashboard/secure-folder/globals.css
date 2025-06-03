@@ -1,0 +1,36 @@
+/* global.css */
+
+/* Ensure the Dialog backdrop has the highest z-index */
+div[data-state="open"] > div.fixed.inset-0 {
+  z-index: 1002 !important; /* Higher than Handsontable elements */
+}
+
+/* Dialog content should be above the backdrop */
+div[data-state="open"] > div.sm\:max-w-\[425px\] {
+  z-index: 1003 !important; /* Higher than the backdrop */
+}
+
+/* Handsontable header z-index */
+.handsontable .htCore th {
+  z-index: 10 !important; /* Lower than Dialog backdrop */
+}
+
+/* Handsontable filter menu (dropdown) */
+.handsontable .htFiltersMenu {
+  z-index: 999 !important; /* Lower than Dialog backdrop */
+}
+
+/* Handsontable general container (to catch any wrapper elements) */
+.handsontable {
+  z-index: 5 !important; /* Lower than Dialog and header */
+}
+
+/* Select dropdown (from FolderReportsPage) */
+div[style*="z-index: 1000"] {
+  z-index: 1000 !important; /* Keep as specified */
+}
+
+/* Ensure no other elements interfere */
+body * {
+  z-index: 1; /* Default low z-index for other elements */
+}

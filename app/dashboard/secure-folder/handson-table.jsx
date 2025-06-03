@@ -1,35 +1,38 @@
-import { HotTable } from '@handsontable/react';
-import { registerAllModules } from 'handsontable/registry';
-import 'handsontable/dist/handsontable.full.min.css';
-import { useRef, useEffect } from 'react';
+import { HotTable } from '@handsontable/react'
+import { registerAllModules } from 'handsontable/registry'
+import 'handsontable/dist/handsontable.full.min.css'
+import { useRef, useEffect } from 'react'
 
 // Register all Handsontable modules
-registerAllModules();
+registerAllModules()
 
 const HandsontableComponent = ({ data }) => {
-  const hotRef = useRef(null);
-  const headers = ['Host Name', 'User', 'Date', 'Event', 'Path', 'Size', 'IP', 'Message'];
+  const hotRef = useRef(null)
+  const headers = ['Host Name', 'User', 'Date', 'Event', 'Path', 'Size', 'IP', 'Message']
 
   useEffect(() => {
     if (hotRef.current) {
-      const hot = hotRef.current.hotInstance;
-      const customBordersPlugin = hot.getPlugin('customBorders');
-      customBordersPlugin.clearBorders(); // Clear all custom borders
+      const hot = hotRef.current.hotInstance
+      const customBordersPlugin = hot.getPlugin('customBorders')
+      customBordersPlugin.clearBorders() // Clear all custom borders
     }
-  }, []);
+  }, [])
 
   // Custom renderer to add title attribute for hover tooltip
   const customRenderer = (instance, td, row, col, prop, value, cellProperties) => {
-    td.innerText = value; // Set the cell content
-    td.title = value; // Set the title attribute for hover tooltip
-    return td;
-  };
+    td.innerText = value // Set the cell content
+    td.title = value // Set the title attribute for hover tooltip
+    return td
+  }
+
+  // Remove the folder ID column from display
+  const displayData = data.map(row => row.slice(0, -1))
 
   return (
     <>
       <HotTable
         ref={hotRef}
-        data={data}
+        data={displayData}
         colHeaders={headers}
         filters={true}
         dropdownMenu={{
@@ -64,6 +67,7 @@ const HandsontableComponent = ({ data }) => {
         .handsontable .htCore th {
           border: none !important;
           background-color: transparent !important;
+          z-index: 1 !important; /* Ensure cells are above the grid background */
         }
         .handsontable .htCore th {
           font-weight: bold;
@@ -100,7 +104,7 @@ const HandsontableComponent = ({ data }) => {
         }
       `}</style>
     </>
-  );
-};
+  )
+}
 
-export default HandsontableComponent;
+export default HandsontableComponent

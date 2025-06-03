@@ -3,6 +3,7 @@
 import { Card, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { AddFolderModal } from './add-folder'
 import {
   Select,
   SelectContent,
@@ -16,7 +17,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import HandsontableComponent from './handson-table'
 import { FolderPlus, Image } from 'lucide-react'
 
-export default function FolderReportsPage () {
+export default function FolderReportsPage() {
   const currentDate = new Date('2025-05-27T16:25:00+05:30').toLocaleString(
     'en-US',
     {
@@ -32,9 +33,9 @@ export default function FolderReportsPage () {
     }
   )
 
-  // Mock data for folder selection
+  // Mock data for folder selection with an "All Folders" option
   const mockFolders = [
-    { id: 'folder1', name: 'Select folder...', path: '/' },
+    { id: 'all', name: 'All Folders', path: 'all' },
     { id: 'test1', name: 'RsyslogTest/test1', path: '/RsyslogTest/test1' },
     { id: 'test2', name: 'RsyslogTest/test2', path: '/RsyslogTest/test2' },
     { id: 'bmw', name: 'RsyslogTest/bmw', path: '/RsyslogTest/bmw' },
@@ -42,8 +43,8 @@ export default function FolderReportsPage () {
     { id: 'folder5', name: 'Folder 5', path: '/custom/folder5' }
   ]
 
-  // Mock data for Handsontable
-  const tableData = [
+  // Mock data for Handsontable with folder association
+  const allTableData = [
     [
       'Active-Com',
       'Janitha',
@@ -52,7 +53,8 @@ export default function FolderReportsPage () {
       '/RsyslogTest/test1/...',
       '0.1 MB',
       '192.168.0.34',
-      'Event:delete,Path:RsyslogTest/kasun/UI/designs/components/js/'
+      'Event:delete,Path:RsyslogTest/kasun/UI/designs/components/js/',
+      'test1' // Associated folder ID
     ],
     [
       'Active-Com',
@@ -62,17 +64,19 @@ export default function FolderReportsPage () {
       '/RsyslogTest/test1/...',
       '0.1 MB',
       '192.168.0.34',
-      'Event:delete,Path:RsyslogTest/...'
+      'Event:delete,Path:RsyslogTest/...',
+      'test1'
     ],
     [
       'Active-Com',
       'Shaheer',
       '2025-04-09 08:10',
       'mkdir',
-      '/RsyslogTest/test1/...',
-      '0.1 MB',
-      '192.168.0.34',
-      'Event:delete,Path:RsyslogTest/...'
+      '/RsyslogTest/test2/...',
+      '0.2 MB',
+      '192.168.0.35',
+      'Event:delete,Path:RsyslogTest/...',
+      'test2'
     ],
     [
       'Office NAS',
@@ -82,18 +86,43 @@ export default function FolderReportsPage () {
       '/RsyslogTest/bmw/...',
       '0.1 MB',
       '192.168.0.34',
-      'Event:delete,Path:RsyslogTest/...'
+      'Event:delete,Path:RsyslogTest/...',
+      'bmw'
+    ],
+    [
+      'Server-1',
+      'Kamal',
+      '2025-04-10 09:15',
+      'move',
+      '/custom/folder4/...',
+      '0.3 MB',
+      '192.168.0.36',
+      'Event:move,Path:/custom/folder4/...',
+      'folder4'
+    ],
+    [
+      'Server-2',
+      'Nimal',
+      '2025-04-11 10:20',
+      'delete',
+      '/custom/folder5/...',
+      '0.5 MB',
+      '192.168.0.37',
+      'Event:delete,Path:/custom/folder5/...',
+      'folder5'
     ]
   ]
 
   // State for search term
   const [folderSearch, setFolderSearch] = useState('')
   // State for selected folder
-  const [selectedFolder, setSelectedFolder] = useState('folder1')
+  const [selectedFolder, setSelectedFolder] = useState('all')
   // Ref for the input field
   const inputRef = useRef(null)
   // State to track if Select is open
   const [isOpen, setIsOpen] = useState(false)
+  // State for filtered table data
+  const [filteredTableData, setFilteredTableData] = useState(allTableData)
 
   // Debounce function to delay filtering
   const debounce = (func, delay) => {
@@ -112,10 +141,20 @@ export default function FolderReportsPage () {
     []
   )
 
-  // Filter folders
+  // Filter folders for the dropdown
   const filteredFolders = mockFolders.filter(folder =>
     folder.name.toLowerCase().includes(folderSearch.toLowerCase())
   )
+
+  // Filter Handsontable data based on selected folder
+  useEffect(() => {
+    if (selectedFolder === 'all') {
+      setFilteredTableData(allTableData)
+    } else {
+      const filteredData = allTableData.filter(row => row[8] === selectedFolder)
+      setFilteredTableData(filteredData)
+    }
+  }, [selectedFolder])
 
   // Focus the input field when the Select opens
   useEffect(() => {
@@ -171,8 +210,8 @@ export default function FolderReportsPage () {
                               height={18}
                               className='h-5 w-5'
                             />
-                            <span>
-                              {folder.name} ({folder.path})
+                            <span className='text-subtitle'>
+                              <span className='font-bold text-subtitle'>{folder.name}</span> ({folder.path})
                             </span>
                           </span>
                         </SelectItem>
@@ -183,25 +222,11 @@ export default function FolderReportsPage () {
               </Select>
             </div>
           </div>
-          <Button
-            variant='outline'
-            size='sm'
-            className='bg-white rounded-lg border text-xs border-specialBlue text-title hover:bg-blue-100 flex items-center'
-          >
-            {/* Use <img> instead of <Image> for static assets in client components */}
-            <img
-              src='/images/foldericon.png'
-              alt='Folder Icon'
-              width={18}
-              height={18}
-              className='h-auto w-8'
-            />
-            Add Folder
-          </Button>
+          <AddFolderModal />
         </div>
         <Card className='bg-transparent shadow-none border-none'>
           <CardDescription>
-            <HandsontableComponent data={tableData} />
+            <HandsontableComponent data={filteredTableData} />
           </CardDescription>
         </Card>
       </div>
