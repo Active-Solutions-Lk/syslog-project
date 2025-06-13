@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import {
   Command,
   CommandInput,
@@ -20,7 +21,8 @@ import users from '@/lib/mockdata'
 import FileCard from './file-card'
 
 export default function UserDetailPage({ params }) {
-  const { userId } = params // Extract userId from the dynamic route
+  const unwrappedParams = React.use(params)
+  const { userId } = unwrappedParams // Extract userId from the dynamic route
   const searchParams = useSearchParams() // Get query parameters
   const fileType = searchParams.get('fileType') // Extract fileType from query
   const router = useRouter()

@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/dashboard/settings/layout.jsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/dashboard/settings/layout.jsx", "lib/auth-prisma.js", "lib/syslog-prisma.js", "scripts/test-dbs.js"],
   "exclude": ["node_modules"]
 }

@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/syslog-client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("SYSLOG_DATABASE_URL")
+}
+
+model remote_logs {
+  id          Int       @id @default(autoincrement())
+  received_at DateTime? @db.DateTime(0)
+  hostname    String?   @db.VarChar(255)
+  facility    String?   @db.VarChar(50)
+  message     String?   @db.Text
+}

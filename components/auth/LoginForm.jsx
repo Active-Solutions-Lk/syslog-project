@@ -45,20 +45,55 @@ export default function LoginForm () {
     }
   })
 
-  function onSubmit (values) {
-    // In a real app, you would validate credentials with your backend
-    console.log(values)
+async function onSubmit(values) {
+  try {
+    // Debug: Log the values being sent
+    console.log("Form submission values:", values);
+
+    // Send login request to the API
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: values.email,
+        password: values.password,
+        rememberMe: values.rememberMe || false, // Include rememberMe, default to false
+      }),
+    });
+
+    // Debug: Log the response status and headers
+    console.log("API response status:", response.status, response.headers);
+
+    const data = await response.json();
+    console.log("API response data:", data);
+
+    if (!response.ok) {
+      toast({
+        title: 'Login failed',
+        description: data.error || 'Invalid email or password',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     toast({
       title: 'Logging in',
-      description: 'Welcome back to Active Solutions!'
-    })
+      description: 'Welcome back to Active Solutions!',
+    });
 
-    // Simulate login delay and redirect
-    setTimeout(() => {
-      router.push('/dashboard')
-    }, 1500)
+    // Redirect to dashboard on successful login
+    router.push('/dashboard');
+  } catch (error) {
+    console.error('Login error:', error);
+    toast({
+      title: 'Error',
+      description: 'Something went wrong. Please try again.',
+      variant: 'destructive',
+    });
   }
+}
 
   return (
     <motion.div
