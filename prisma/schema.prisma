@@ -1,17 +1,47 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/syslog-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("SYSLOG_DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
-model remote_logs {
-  id          Int       @id @default(autoincrement())
-  received_at DateTime? @db.DateTime(0)
-  hostname    String?   @db.VarChar(255)
-  facility    String?   @db.VarChar(50)
-  message     String?   @db.Text
+model log_mirror {
+  id           Int       @id
+  collector_id Int
+  received_at  DateTime? @db.DateTime(0)
+  hostname     String?   @db.VarChar(255)
+  facility     String?   @db.VarChar(50)
+  synced_at    DateTime? @default(now()) @db.Timestamp(0)
+  event        String?   @db.VarChar(50)
+  path         String?   @db.Text
+  file_folder  String?   @db.VarChar(50)
+  size         String?   @db.VarChar(50)
+  user         String?   @db.VarChar(50)
+  ip           String?   @db.VarChar(50)
+  message      String    @db.Text
+  category     String?   @db.Text
+}
+
+model session {
+  id           String   @id
+  userId       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  expires      DateTime
+  sessionToken String   @unique(map: "Session_sessionToken_key")
+
+  @@index([userId], map: "Session_userId_fkey")
+}
+
+model user {
+  id           Int      @id @default(autoincrement())
+  name         String?
+  email        String   @unique(map: "User_email_key")
+  passwordHash String?
+  company      String
+  createdAt    DateTime @default(now()) @db.Timestamp(3)
+  updatedAt    DateTime @default(now()) @db.Timestamp(3)
 }

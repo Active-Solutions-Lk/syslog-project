@@ -9,7 +9,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Eye, EyeOff } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -27,14 +26,16 @@ const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z
     .string()
-    .min(6, { message: 'Password must be at least 6 characters' }),
+    .min(8, { message: 'Password must be at least 8 characters' }), // Updated to match backend
   rememberMe: z.boolean().optional()
 })
 
-export default function LoginForm () {
+export default function LoginForm() {
   const router = useRouter()
   const { toast } = useToast()
   const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false) // Added loading state
+  const [errorMessage, setErrorMessage] = useState('') // Added for error display
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -45,55 +46,94 @@ export default function LoginForm () {
     }
   })
 
-async function onSubmit(values) {
-  try {
-    // Debug: Log the values being sent
-    console.log("Form submission values:", values);
+  async function onSubmit(values) {
+    setIsLoading(true)
+    setErrorMessage('') // Clear previous errors
+    try {
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password,
+          rememberMe: values.rememberMe || false,
+        }),
+      })
 
-    // Send login request to the API
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: values.email,
-        password: values.password,
-        rememberMe: values.rememberMe || false, // Include rememberMe, default to false
-      }),
-    });
+      const contentType = response.headers.get('content-type')
+      let data
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json()
+      } else {
+        throw new Error('Unexpected server response format')
+      }
 
-    // Debug: Log the response status and headers
-    console.log("API response status:", response.status, response.headers);
+      if (!response.ok) {
+        let errorMsg = data.error || 'Invalid email or password'
+        switch (response.status) {
+          case 400:
+            errorMsg = data.error || 'Invalid input data provided'
+            break
+          case 401:
+            errorMsg = data.error || 'Invalid email or password'
+            break
+          case 404:
+            errorMsg = 'API endpoint not found'
+            break
+          case 405:
+            errorMsg = 'Method not allowed'
+            break
+          case 409:
+            errorMsg = data.error || 'A session conflict occurred'
+            break
+          case 500:
+            errorMsg = 'Server error occurred. Please try again later.'
+            break
+          default:
+            errorMsg = 'An unexpected error occurred'
+        }
 
-    const data = await response.json();
-    console.log("API response data:", data);
+        setErrorMessage(errorMsg)
+        toast({
+          title: 'Login Failed',
+          description: errorMsg,
+          variant: 'destructive',
+          duration: 5000
+        })
+        return
+      }
 
-    if (!response.ok) {
+      // Store session token (could use localStorage or cookies based on rememberMe)
+      if (values.rememberMe) {
+        localStorage.setItem('sessionToken', data.sessionToken)
+      } else {
+        sessionStorage.setItem('sessionToken', data.sessionToken)
+      }
+
       toast({
-        title: 'Login failed',
-        description: data.error || 'Invalid email or password',
+        title: 'Login Successful',
+        description: data.message || 'Welcome back to Active Solutions!',
+        variant: 'success',
+        duration: 3000
+      })
+
+      router.push('/dashboard')
+    } catch (error) {
+      console.error('Login error:', error)
+      const errorMsg = 'Network error. Please check your connection and try again.'
+      setErrorMessage(errorMsg)
+      toast({
+        title: 'Error',
+        description: errorMsg,
         variant: 'destructive',
-      });
-      return;
+        duration: 5000
+      })
+    } finally {
+      setIsLoading(false)
     }
-
-    toast({
-      title: 'Logging in',
-      description: 'Welcome back to Active Solutions!',
-    });
-
-    // Redirect to dashboard on successful login
-    router.push('/dashboard');
-  } catch (error) {
-    console.error('Login error:', error);
-    toast({
-      title: 'Error',
-      description: 'Something went wrong. Please try again.',
-      variant: 'destructive',
-    });
   }
-}
 
   return (
     <motion.div
@@ -116,6 +156,7 @@ async function onSubmit(values) {
                       placeholder='your@email.com'
                       className='h-12 bg-transparent border-none focus:border-none focus:outline-none focus:ring-0 outline-none ring-0 shadow-none focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none no-border'
                       {...field}
+                      disabled={isLoading}
                     />
                   </FormControl>
                   <FormMessage />
@@ -166,11 +207,13 @@ async function onSubmit(values) {
                         placeholder='••••••••••••'
                         className='h-12 bg-transparent border-none focus:border-none focus:ring-0 outline-none pr-10 no-border'
                         {...field}
+                        disabled={isLoading}
                       />
                       <button
                         type='button'
                         className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700'
                         onClick={() => setShowPassword(!showPassword)}
+                        disabled={isLoading}
                       >
                         {showPassword ? (
                           <EyeOff size={20} />
@@ -200,6 +243,7 @@ async function onSubmit(values) {
                       checked={field.value}
                       onCheckedChange={field.onChange}
                       className='h-5 w-5 text-blue-500 border-2 border-blue-500 rounded focus:ring-blue-500 focus:ring-offset-0 focus:ring-offset-transparent'
+                      disabled={isLoading}
                     />
                   </FormControl>
                   <FormLabel className='text-sm font-normal pb-2 text-gray-700 cursor-pointer leading-none flex items-center'>
@@ -216,27 +260,39 @@ async function onSubmit(values) {
             </Link>
           </motion.div>
 
-          <div className=' flex items-start gap-2 w-full' >
-
-          <motion.div variants={inputVariants} className='pt-2'>
-            <Button
-              type='submit'
-              className='w-[135px] h-[45px] bg-blue-500 hover:bg-blue-600 text-lg'
+          {/* Error display area before buttons */}
+          {errorMessage && (
+            <motion.div
+              variants={inputVariants}
+              className='text-sm text-red-600 font-medium'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
             >
-              Login
-            </Button>
-          </motion.div>
-          <motion.div variants={inputVariants} className='pt-2'>
-            <Link href="/signup"> 
-            <Button
-              type='button'
-              className='w-[160px] h-[45px] bg-transparent border-2 text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white text-lg'
-            >
-              Signup
-            </Button></Link>
-           
-          </motion.div>
+              {errorMessage}
+            </motion.div>
+          )}
 
+          <div className='flex items-start gap-2 w-full'>
+            <motion.div variants={inputVariants} className='pt-2'>
+              <Button
+                type='submit'
+                className='w-[135px] h-[45px] bg-blue-500 hover:bg-blue-600 text-lg'
+                disabled={isLoading}
+              >
+                {isLoading ? 'Logging In...' : 'Login'}
+              </Button>
+            </motion.div>
+            <motion.div variants={inputVariants} className='pt-2'>
+              <Link href='/signup'>
+                <Button
+                  type='button'
+                  className='w-[160px] h-[45px] bg-transparent border-2 text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white text-lg'
+                  disabled={isLoading}
+                >
+                  Signup
+                </Button>
+              </Link>
+            </motion.div>
           </div>
         </form>
       </Form>

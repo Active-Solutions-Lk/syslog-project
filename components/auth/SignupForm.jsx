@@ -1,92 +1,239 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Eye, EyeOff } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import { Eye, EyeOff } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { formVariants, inputVariants } from "@/lib/animations";
+  FormMessage
+} from '@/components/ui/form'
+import { formVariants, inputVariants } from '@/lib/animations'
 
-const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  company: z.string().min(2, { message: "Company name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const formSchema = z
+  .object({
+    name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+    company: z
+      .string()
+      .min(2, { message: 'Company name must be at least 2 characters' }),
+    email: z.string().email({ message: 'Please enter a valid email address' }),
+    password: z
+      .string()
+      .min(8, { message: 'Password must be at least 8 characters' }), // Updated to match backend validation
+    confirmPassword: z.string()
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword']
+  })
 
 export default function SignupForm() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+  const router = useRouter()
+  const { toast } = useToast()
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false) // Added loading state
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      company: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
+      name: '',
+      company: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    }
+  })
 
-  function onSubmit(values) {
-    console.log(values);
-    
-    toast({
-      title: "Account created!",
-      description: "Welcome to Active Solutions!",
-    });
+  async function onSubmit(values) {
+    setIsLoading(true)
+    try {
+      const { confirmPassword, ...payload } = values // Exclude confirmPassword
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
 
-    setTimeout(() => {
-      router.push("/login");
-    }, 1500);
+      let data
+      const contentType = response.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json()
+      } else {
+        throw new Error('Unexpected server response format')
+      }
+
+      if (!response.ok) {
+        let errorMessage = data.error || 'Unable to create account'
+        let variant = 'destructive'
+
+        // Handle specific status codes
+        switch (response.status) {
+          case 400:
+            errorMessage = data.error || 'Invalid input data provided'
+            break
+          case 409:
+            errorMessage = data.error || 'A user with this email already exists'
+            break
+          case 404:
+            errorMessage = 'API endpoint not found'
+            break
+          case 405:
+            errorMessage = 'Method not allowed'
+            break
+          case 500:
+            errorMessage = 'Server error occurred. Please try again later.'
+            break
+          default:
+            errorMessage = 'An unexpected error occurred'
+        }
+
+        toast({
+          title: 'Sign-up Failed',
+          description: errorMessage,
+          variant: variant,
+          duration: 5000
+        })
+        return
+      }
+
+      // Success case
+      toast({
+        title: 'Sign-up Successful',
+        description: data.message || 'Welcome to Active Solutions!',
+        variant: 'success',
+        duration: 3000
+      })
+      router.push('/dashboard')
+    } catch (error) {
+      console.error('Sign-up error:', error)
+      toast({
+        title: 'Error',
+        description: 'Network error. Please check your connection and try again.',
+        variant: 'destructive',
+        duration: 5000
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // State to hold server error message
+  const [serverError, setServerError] = useState('')
+
+  async function onSubmit(values) {
+    setIsLoading(true)
+    setServerError('') // Reset error before submit
+    try {
+      const { confirmPassword, ...payload } = values
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      let data
+      const contentType = response.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json()
+      } else {
+        throw new Error('Unexpected server response format')
+      }
+
+      if (!response.ok) {
+        let errorMessage = data.error || 'Unable to create account'
+        let variant = 'destructive'
+
+        switch (response.status) {
+          case 400:
+            errorMessage = data.error || 'Invalid input data provided'
+            break
+          case 409:
+            errorMessage = data.error || 'A user with this email already exists'
+            break
+          case 404:
+            errorMessage = 'API endpoint not found'
+            break
+          case 405:
+            errorMessage = 'Method not allowed'
+            break
+          case 500:
+            errorMessage = 'Server error occurred. Please try again later.'
+            break
+          default:
+            errorMessage = 'An unexpected error occurred'
+        }
+
+        setServerError(errorMessage) // Set error for display
+        toast({
+          title: 'Sign-up Failed',
+          description: errorMessage,
+          variant: variant,
+          duration: 5000
+        })
+        return
+      }
+
+      toast({
+        title: 'Sign-up Successful',
+        description: data.message || 'Welcome to Active Solutions!',
+        variant: 'success',
+        duration: 3000
+      })
+      router.push('/dashboard')
+    } catch (error) {
+      console.error('Sign-up error:', error)
+      setServerError('Network error. Please check your connection and try again.')
+      toast({
+        title: 'Error',
+        description: 'Network error. Please check your connection and try again.',
+        variant: 'destructive',
+        duration: 5000
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <motion.div
       variants={formVariants}
-      initial="hidden"
-      animate="visible"
-      className="w-full h-[calc(100vh-200px)] overflow-y-auto"
+      initial='hidden'
+      animate='visible'
+      className='w-full h-[calc(100vh-200px)] overflow-y-auto'
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
+        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 pt-2'>
           <motion.div variants={inputVariants}>
             <FormField
               control={form.control}
-              name="name"
+              name='name'
               render={({ field }) => (
-                <FormItem className="border-2 border-blue-500 rounded-md p-1 custom-border-radius">
-                  <FormLabel className="text-xs ms-2 text-gray-700">Name</FormLabel>
+                <FormItem className='border-2 border-blue-500 rounded-md p-1 custom-border-radius'>
+                  <FormLabel className='text-xs ms-2 text-gray-700'>
+                    Name
+                  </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Your name"
-                      className="h-5 bg-transparent border-none focus:border-none focus:outline-none focus:ring-0 outline-none ring-0 shadow-none focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none no-border text-sm"
+                      placeholder='Your name'
+                      className='h-5 bg-transparent border-none focus:border-none focus:outline-none focus:ring-0 outline-none ring-0 shadow-none focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none no-border text-sm'
                       {...field}
+                      disabled={isLoading}
                     />
                   </FormControl>
-                  <FormMessage className="text-xs" />
+                  <FormMessage className='text-xs' />
                 </FormItem>
               )}
             />
@@ -123,18 +270,21 @@ export default function SignupForm() {
           <motion.div variants={inputVariants}>
             <FormField
               control={form.control}
-              name="company"
+              name='company'
               render={({ field }) => (
-                <FormItem className="border-2 border-blue-500 rounded-md p-1 custom-border-radius">
-                  <FormLabel className="text-xs ms-2 text-gray-700">Company</FormLabel>
+                <FormItem className='border-2 border-blue-500 rounded-md p-1 custom-border-radius'>
+                  <FormLabel className='text-xs ms-2 text-gray-700'>
+                    Company
+                  </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Company name"
-                      className="h-5 bg-transparent border-none focus:border-none focus:outline-none focus:ring-0 outline-none ring-0 shadow-none focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none no-border text-sm"
+                      placeholder='Company name'
+                      className='h-5 bg-transparent border-none focus:border-none focus:outline-none focus:ring-0 outline-none ring-0 shadow-none focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none no-border text-sm'
                       {...field}
+                      disabled={isLoading}
                     />
                   </FormControl>
-                  <FormMessage className="text-xs" />
+                  <FormMessage className='text-xs' />
                 </FormItem>
               )}
             />
@@ -143,18 +293,21 @@ export default function SignupForm() {
           <motion.div variants={inputVariants}>
             <FormField
               control={form.control}
-              name="email"
+              name='email'
               render={({ field }) => (
-                <FormItem className="border-2 border-blue-500 rounded-md p-1 custom-border-radius">
-                  <FormLabel className="text-xs ms-2 text-gray-700">Email</FormLabel>
+                <FormItem className='border-2 border-blue-500 rounded-md p-1 custom-border-radius'>
+                  <FormLabel className='text-xs ms-2 text-gray-700'>
+                    Email
+                  </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="your@email.com"
-                      className="h-5 bg-transparent border-none focus:border-none focus:outline-none focus:ring-0 outline-none ring-0 shadow-none focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none no-border text-sm"
+                      placeholder='your@email.com'
+                      className='h-5 bg-transparent border-none focus:border-none focus:outline-none focus:ring-0 outline-none ring-0 shadow-none focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none no-border text-sm'
                       {...field}
+                      disabled={isLoading}
                     />
                   </FormControl>
-                  <FormMessage className="text-xs" />
+                  <FormMessage className='text-xs' />
                 </FormItem>
               )}
             />
@@ -163,28 +316,36 @@ export default function SignupForm() {
           <motion.div variants={inputVariants}>
             <FormField
               control={form.control}
-              name="password"
+              name='password'
               render={({ field }) => (
-                <FormItem className="border-2 border-blue-500 rounded-md p-1 custom-border-radius">
-                  <FormLabel className="text-xs ms-2 text-gray-700">Password</FormLabel>
+                <FormItem className='border-2 border-blue-500 rounded-md p-1 custom-border-radius'>
+                  <FormLabel className='text-xs ms-2 text-gray-700'>
+                    Password
+                  </FormLabel>
                   <FormControl>
-                    <div className="relative">
+                    <div className='relative'>
                       <Input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••••••"
-                        className="h-5 bg-transparent border-none focus:border-none focus:outline-none focus:ring-0 outline-none ring-0 shadow-none focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none no-border text-sm"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder='••••••••••••'
+                        className='h-5 bg-transparent border-none focus:border-none focus:outline-none focus:ring-0 outline-none ring-0 shadow-none focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none no-border text-sm'
                         {...field}
+                        disabled={isLoading}
                       />
                       <button
-                        type="button"
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        type='button'
+                        className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700'
                         onClick={() => setShowPassword(!showPassword)}
+                        disabled={isLoading}
                       >
-                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        {showPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
                       </button>
                     </div>
                   </FormControl>
-                  <FormMessage className="text-xs" />
+                  <FormMessage className='text-xs' />
                 </FormItem>
               )}
             />
@@ -193,56 +354,79 @@ export default function SignupForm() {
           <motion.div variants={inputVariants}>
             <FormField
               control={form.control}
-              name="confirmPassword"
+              name='confirmPassword'
               render={({ field }) => (
-                <FormItem className="border-2 border-blue-500 rounded-md p-1 custom-border-radius">
-                  <FormLabel className="text-xs ms-2 text-gray-700">Confirm Password</FormLabel>
+                <FormItem className='border-2 border-blue-500 rounded-md p-1 custom-border-radius'>
+                  <FormLabel className='text-xs ms-2 text-gray-700'>
+                    Confirm Password
+                  </FormLabel>
                   <FormControl>
-                    <div className="relative">
+                    <div className='relative'>
                       <Input
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="••••••••••••"
-                        className="h-5 bg-transparent border-none focus:border-none focus:outline-none focus:ring-0 outline-none ring-0 shadow-none focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none no-border text-sm"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        placeholder='••••••••••••'
+                        className='h-5 bg-transparent border-none focus:border-none focus:outline-none focus:ring-0 outline-none ring-0 shadow-none focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none no-border text-sm'
                         {...field}
+                        disabled={isLoading}
                       />
                       <button
-                        type="button"
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        type='button'
+                        className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700'
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        disabled={isLoading}
                       >
-                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        {showConfirmPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
                       </button>
                     </div>
                   </FormControl>
-                  <FormMessage className="text-xs" />
+                  <FormMessage className='text-xs' />
                 </FormItem>
               )}
             />
           </motion.div>
 
-          <div className="flex space-x-4 mt-4">
-            <motion.div variants={inputVariants} className="w-1/3">
-              <Link href="/login">
+          {/* Server error message */}
+          {serverError && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className='bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded text-xs mb-2'
+              role='alert'
+            >
+              {serverError}
+            </motion.div>
+          )}
+
+
+          <div className='flex space-x-4 mt-4'>
+            <motion.div variants={inputVariants} className='w-1/3'>
+              <Link href='/login'>
                 <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-8 border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white text-sm"
+                  type='button'
+                  variant='outline'
+                  className='w-full h-8 border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white text-sm'
+                  disabled={isLoading}
                 >
                   Login
                 </Button>
               </Link>
             </motion.div>
-            <motion.div variants={inputVariants} className="w-2/4">
+            <motion.div variants={inputVariants} className='w-2/4'>
               <Button
-                type="submit"
-                className="w-full h-8 bg-blue-500 hover:bg-blue-600 text-sm"
+                type='submit'
+                className='w-full h-8 bg-blue-500 hover:bg-blue-600 text-sm'
+                disabled={isLoading}
               >
-                Sign Up
+                {isLoading ? 'Signing Up...' : 'Sign Up'}
               </Button>
             </motion.div>
           </div>
         </form>
       </Form>
     </motion.div>
-  );
+  )
 }
