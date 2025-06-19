@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '../../../../lib/prisma';
+import prisma from '../../../../lib/prisma-logger';
 import bcrypt from 'bcryptjs';
 
 // Utility function to create standardized error responses
@@ -42,7 +42,7 @@ export async function POST(request) {
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.admin.findUnique({
       where: { email },
     });
 
@@ -54,7 +54,7 @@ export async function POST(request) {
     const passwordHash = await bcrypt.hash(password, 12);
 
     // Create user
-    const user = await prisma.user.create({
+    const user = await prisma.admin.create({
       data: {
         name,
         email,

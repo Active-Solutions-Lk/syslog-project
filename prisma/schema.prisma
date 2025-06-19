@@ -8,40 +8,70 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model log_mirror {
-  id           Int       @id
-  collector_id Int
-  received_at  DateTime? @db.DateTime(0)
-  hostname     String?   @db.VarChar(255)
-  facility     String?   @db.VarChar(50)
-  synced_at    DateTime? @default(now()) @db.Timestamp(0)
-  event        String?   @db.VarChar(50)
-  path         String?   @db.Text
-  file_folder  String?   @db.VarChar(50)
-  size         String?   @db.VarChar(50)
-  user         String?   @db.VarChar(50)
-  ip           String?   @db.VarChar(50)
-  message      String    @db.Text
-  category     String?   @db.Text
-}
-
 model session {
-  id           String   @id
+  id           String       @id
   userId       String
-  createdAt    DateTime @default(now())
+  createdAt    DateTime     @default(now())
   updatedAt    DateTime
   expires      DateTime
-  sessionToken String   @unique(map: "Session_sessionToken_key")
+  sessionToken String       @unique(map: "Session_sessionToken_key")
+  super_admins super_admins @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Session_userId_fkey")
 
   @@index([userId], map: "Session_userId_fkey")
 }
 
-model user {
-  id           Int      @id @default(autoincrement())
+model account {
+  id                String       @id
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refreshToken      String?
+  accessToken       String?
+  expiresAt         Int?
+  tokenType         String?
+  scope             String?
+  idToken           String?
+  sessionState      String?
+  super_admins      super_admins @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Account_userId_fkey")
+
+  @@unique([provider, providerAccountId], map: "Account_provider_providerAccountId_key")
+  @@index([userId], map: "Account_userId_fkey")
+}
+
+model packages {
+  id           Int        @id @default(autoincrement())
+  name         String     @db.VarChar(50)
+  log_count    Int
+  duration     String     @db.Text
+  device_count Int
+  log_analyce  Int        @db.TinyInt
+  created_at   DateTime   @default(now()) @db.Timestamp(0)
+  updated_at   DateTime   @default(now()) @db.Timestamp(0)
+  projects     projects[]
+}
+
+model projects {
+  id             Int      @id @default(autoincrement())
+  activation_key String   @db.Text
+  pkg_id         Int
+  rep            String   @db.VarChar(100)
+  contact        Int
+  company        String?  @db.VarChar(50)
+  created_at     DateTime @default(now()) @db.Timestamp(0)
+  updated_at     DateTime @default(now()) @db.Timestamp(0)
+  packages       packages @relation(fields: [pkg_id], references: [id], onDelete: Cascade, map: "fk_pkgid_package")
+
+  @@index([pkg_id], map: "pkg_id")
+}
+
+model super_admins {
+  id           String    @id
   name         String?
-  email        String   @unique(map: "User_email_key")
+  email        String    @unique(map: "User_email_key")
   passwordHash String?
-  company      String
-  createdAt    DateTime @default(now()) @db.Timestamp(3)
-  updatedAt    DateTime @default(now()) @db.Timestamp(3)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+  account      account[]
+  session      session[]
 }

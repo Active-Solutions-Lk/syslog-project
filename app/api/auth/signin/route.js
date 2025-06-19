@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '../../../../lib/prisma';
+import prisma from '../../../../lib/prisma-logger';
 import bcrypt from 'bcryptjs';
 import { nanoid } from 'nanoid';
 
@@ -42,7 +42,7 @@ export async function POST(request) {
     }
 
     // Find user by email
-    const user = await prisma.user.findUnique({
+    const user = await prisma.admin.findUnique({
       where: { email },
     });
 

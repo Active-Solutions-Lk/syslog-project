@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma-logger"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("LOGGER_DATABASE_URL")
+}
+
+model collectors {
+  id            Int                @id @default(autoincrement())
+  ip            String             @db.VarChar(50)
+  username      String             @db.VarChar(50)
+  password      String             @db.VarChar(255)
+  database_name String             @default("syslog_db") @db.VarChar(50)
+  status        collectors_status? @default(active)
+  created_at    DateTime?          @default(now()) @db.Timestamp(0)
+  log_mirror    log_mirror[]
+}
+
+model log_mirror {
+  id           Int        @id @default(autoincrement())
+  collector_id Int
+  received_at  DateTime?  @db.DateTime(0)
+  hostname     Int?
+  facility     String?    @db.VarChar(50)
+  synced_at    DateTime?  @default(now()) @db.Timestamp(0)
+  event        String?    @db.VarChar(50)
+  path         String?    @db.Text
+  file_folder  String?    @db.VarChar(50)
+  size         String?    @db.VarChar(50)
+  user         Int?
+  ip           String?    @db.VarChar(50)
+  message      String     @db.Text
+  category     String?    @db.Text
+  collectors   collectors @relation(fields: [collector_id], references: [id], onDelete: Cascade, map: "fk_collector_logmirror")
+  devices      devices?   @relation(fields: [hostname], references: [id], onDelete: Cascade, map: "fk_hostname_devices")
+  users        users?     @relation(fields: [user], references: [id], onDelete: Cascade, map: "fk_user_users")
+
+  @@index([collector_id], map: "fk_collector_logmirror")
+  @@index([hostname], map: "hostname")
+  @@index([user], map: "user")
+}
+
+model devices {
+  id         Int          @id @default(autoincrement())
+  host_name  String       @unique(map: "host_name") @db.VarChar(255)
+  status     String?      @default("active") @db.VarChar(50)
+  created_at DateTime     @db.DateTime(0)
+  updated_at DateTime     @db.DateTime(0)
+  log_mirror log_mirror[]
+}
+
+model users {
+  id         Int          @id @default(autoincrement())
+  name       String       @db.VarChar(255)
+  ip         String       @db.VarChar(45)
+  created_at DateTime     @db.DateTime(0)
+  updated_at DateTime     @db.DateTime(0)
+  log_mirror log_mirror[]
+
+  @@unique([name, ip], map: "unique_user_ip")
+}
+
+model admin {
+  id           Int       @id @default(autoincrement())
+  name         String?
+  email        String    @unique(map: "User_email_key")
+  passwordHash String?
+  company      String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+  session      session[]
+}
+
+model session {
+  id           String   @id
+  adminId      Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  expires      DateTime
+  sessionToken String   @unique(map: "Session_sessionToken_key")
+  admin        admin    @relation(fields: [adminId], references: [id], onDelete: Cascade, map: "fk_adminID_admin")
+
+  @@index([adminId], map: "Session_userId_fkey")
+}
+
+enum collectors_status {
+  active
+  inactive
+}
