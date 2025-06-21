@@ -14,7 +14,7 @@ export default function DevicesAndChartsGrid({ itemVariants , deviceCount, linec
 
    const devices = deviceCount;
 
-  console.log('DevicesAndChartsGrid linechartData', linechartData); 
+ // console.log('DevicesAndChartsGrid linechartData', linechartData); 
 
   return (
     <div className='grid grid-cols-1 gap-8 lg:grid-cols-2'>

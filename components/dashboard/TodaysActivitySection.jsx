@@ -3,11 +3,18 @@ import { motion, useInView } from 'framer-motion'
 import { Activity, TrendingUp, Users } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 
-export default function TodaysActivitySection({ containerVariants, itemVariants }) {
+export default function TodaysActivitySection({ containerVariants, itemVariants, todaysLogStats }) {
   const activityTitleRef = React.useRef(null)
   const activityCardsRef = React.useRef(null)
   const inViewActivityTitle = useInView(activityTitleRef, { once: true })
   const inViewActivityCards = useInView(activityCardsRef, { once: true })
+
+  // console.log('TodaysActivitySection todaysLogStats:', todaysLogStats)
+  // Fallbacks in case todaysLogStats is undefined or missing keys
+  const uploads = todaysLogStats?.uploads ?? 0
+  const downloads = todaysLogStats?.downloads ?? 0
+  const accessUsers = todaysLogStats?.accessUsers ?? 0
+  const totalUsers = todaysLogStats?.totalUsers ?? 0
 
   return (
     <>
@@ -36,10 +43,10 @@ export default function TodaysActivitySection({ containerVariants, itemVariants 
                   <Activity className='h-6 w-6 text-white' />
                 </div>
                 <h3 className='text-lg font-medium text-subtitle'>
-                  Today Writes
+                  Today Uploads
                 </h3>
               </div>
-              <div className='text-2xl font-bold text-subtitle'>3450</div>
+              <div className='text-2xl font-bold text-subtitle'>{uploads}</div>
             </CardContent>
           </Card>
         </motion.div>
@@ -52,10 +59,10 @@ export default function TodaysActivitySection({ containerVariants, itemVariants 
                   <TrendingUp className='h-6 w-6 text-white' />
                 </div>
                 <h3 className='text-lg font-medium text-subtitle'>
-                  Today Reads
+                  Today Downloads
                 </h3>
               </div>
-              <div className='text-2xl font-bold text-subtitle'>25</div>
+              <div className='text-2xl font-bold text-subtitle'>{downloads}</div>
             </CardContent>
           </Card>
         </motion.div>
@@ -71,7 +78,9 @@ export default function TodaysActivitySection({ containerVariants, itemVariants 
                   Access Users
                 </h3>
               </div>
-              <div className='text-2xl font-bold text-subtitle'>52/200</div>
+              <div className='text-2xl font-bold text-subtitle'>
+                {accessUsers}/{totalUsers}
+              </div>
             </CardContent>
           </Card>
         </motion.div>

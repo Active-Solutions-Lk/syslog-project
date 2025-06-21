@@ -24,13 +24,13 @@ export default function DevicesCard({ data, linechartData, deviceSummary }) {
   const activeCount = summary?.active ?? onlineDevices;
   const totalCount = summary?.total ?? totalDevices;
 
-  console.log('DeviceCard data:', {
-    devices,
-    linechartData,
-    summary,
-    calculatedOnline: onlineDevices,
-    calculatedTotal: totalDevices
-  });
+//  // console.log('DeviceCard data:', {
+//     devices,
+//     linechartData,
+//     summary,
+//     calculatedOnline: onlineDevices,
+//     calculatedTotal: totalDevices
+//   });
 
   return (
     <Card>
