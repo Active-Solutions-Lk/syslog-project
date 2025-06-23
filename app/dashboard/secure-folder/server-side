@@ -1,0 +1,164 @@
+export async function fetchDevices () {
+  try {
+    const response = await fetch('/api/devices')
+    if (!response.ok) {
+      throw new Error('Bad Response')
+    }
+
+    const devicesData = await response.json()
+    const uniqueDevices = []
+    const seenNames = new Set()
+
+    for (const device of devicesData.data) {
+      if (device.status === 'active' && !seenNames.has(device.host_name)) {
+        seenNames.add(device.host_name)
+        uniqueDevices.push({
+          id: device.id,
+          host_name: device.host_name
+        })
+      }
+    }
+
+    return uniqueDevices
+  } catch (error) {
+    console.error('Error fetching devices:', error)
+    throw new Error(
+      'Unable to load device data. Refresh the page and try again.'
+    )
+  }
+}
+
+export async function AddFolder (secureFolder) {
+  try {
+    const response = await fetch('/api/add-folder', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(secureFolder)
+    })
+
+    if (!response.ok) {
+      throw new Error('Bad Response from API')
+    }
+
+    return await response.json() // return the result
+  } catch (error) {
+    console.error('Error adding folder:', error)
+    throw new Error(
+      'Unable to add new secure folder. Refresh the page and try again.'
+    )
+  }
+}
+
+export async function fetchSecureFolders () {
+  try {
+    const response = await fetch('/api/fetch-folders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({}) // Add filters if needed
+    })
+
+    if (!response.ok) {
+      const errText = await response.text() // get more error info
+      console.error('API Error Response:', errText)
+      throw new Error('Failed to fetch secure folders')
+    }
+
+    const result = await response.json()
+
+    if (!result.success) {
+      throw new Error(result.error || 'Unknown error')
+    }
+
+    const transformedFolders = result.data.map(folder => {
+      // Use last part of the path or fallback to name as ID
+      const lastSegment =
+        folder.path?.split('/').filter(Boolean).pop() || folder.name
+
+      return {
+        id: lastSegment,
+        name: folder.name || folder.path,
+        path: folder.path
+      }
+    })
+
+    // Add static "All Folders" at the top
+    return [
+      { id: 'all', name: 'All Folders', path: 'all' },
+      ...transformedFolders
+    ]
+  } catch (error) {
+    console.error('Error in fetchSecureFolders:', error)
+    return [
+      { id: 'all', name: 'All Folders', path: 'all' } // Return fallback
+    ]
+  }
+}
+
+
+
+
+export async function FetchAllLogs() {
+  try {
+    const response = await fetch('/api/fetch-logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}) // Add filters here if needed
+    })
+
+    const result = await response.json()
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to fetch logs')
+    }
+
+    const logs = result.data
+
+    const formattedLogs = logs.map(log => {
+      const hostName = log.devices?.host_name || 'Unknown Host'
+      const userName = log.users?.username || 'Unknown User'
+      const timestamp = log.received_at
+        ? new Date(log.received_at).toISOString().replace('T', ' ').substring(0, 16)
+        : 'Unknown Time'
+      const event = log.event || 'unknown'
+      const path = log.path || ''
+      const size = log.size || '0 MB'
+      const ip = log.ip || 'N/A'
+      const message = log.message || ''
+      const folderId = extractFolderId(path)
+
+      return [
+        hostName,
+        userName,
+        timestamp,
+        event,
+        truncatePath(path),
+        size,
+        ip,
+        message,
+        folderId
+      ]
+    })
+
+    // console.log('formattedLogs', formattedLogs)
+    return formattedLogs
+  } catch (error) {
+    console.error('Error fetching and formatting logs:', error)
+    return []
+  }
+}
+
+function truncatePath(path) {
+  if (!path) return ''
+  const segments = path.split('/')
+  return segments.slice(0, 3).join('/') + '/...'
+}
+
+function extractFolderId(path) {
+  if (!path) return 'unknown'
+  const segments = path.split('/').filter(Boolean)
+  return segments.length > 0 ? segments[segments.length - 1] : 'unknown'
+}

@@ -44,12 +44,13 @@ model log_mirror {
 }
 
 model devices {
-  id         Int          @id @default(autoincrement())
-  host_name  String       @unique(map: "host_name") @db.VarChar(255)
-  status     String?      @default("active") @db.VarChar(50)
-  created_at DateTime     @db.DateTime(0)
-  updated_at DateTime     @db.DateTime(0)
-  log_mirror log_mirror[]
+  id             Int              @id @default(autoincrement())
+  host_name      String           @unique(map: "host_name") @db.VarChar(255)
+  status         String?          @default("active") @db.VarChar(50)
+  created_at     DateTime         @db.DateTime(0)
+  updated_at     DateTime         @db.DateTime(0)
+  log_mirror     log_mirror[]
+  secure_folders secure_folders[]
 }
 
 model users {
@@ -91,6 +92,18 @@ model file_types {
   name      String @db.VarChar(50)
   extension String @db.Text
   allow     Int    @db.TinyInt
+}
+
+model secure_folders {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(50)
+  device_id  Int
+  path       String   @db.Text
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+  devices    devices  @relation(fields: [device_id], references: [id], onDelete: Cascade, map: "fk_deviceId_device")
+
+  @@index([device_id], map: "device_id")
 }
 
 enum collectors_status {

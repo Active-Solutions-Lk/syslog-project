@@ -6,7 +6,8 @@ import { useRef, useEffect } from 'react'
 // Register all Handsontable modules
 registerAllModules()
 
-const HandsontableComponent = ({ data }) => {
+const HandsontableComponent = ({ data, fetchLogsLoading, fetchLogsError }) => {
+  // console.log('received Data', data)
   const hotRef = useRef(null)
   const headers = ['Host Name', 'User', 'Date', 'Event', 'Path', 'Size', 'IP', 'Message']
 
@@ -27,6 +28,9 @@ const HandsontableComponent = ({ data }) => {
 
   // Remove the folder ID column from display
   const displayData = data.map(row => row.slice(0, -1))
+
+  // Get the current screen height and set table height accordingly
+  const tableHeight = typeof window !== 'undefined' ? window.innerHeight - 200 : 600 // 200px offset for header/footer
 
   return (
     <>
@@ -54,7 +58,7 @@ const HandsontableComponent = ({ data }) => {
         }}
         rowHeaders={false}
         width="100%"
-        height="auto"
+        height={tableHeight}
         stretchH="all"
         licenseKey="non-commercial-and-evaluation"
         customBorders={true}
