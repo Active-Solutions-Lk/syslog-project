@@ -1,71 +1,110 @@
-import { HotTable } from '@handsontable/react'
-import { registerAllModules } from 'handsontable/registry'
-import 'handsontable/dist/handsontable.full.min.css'
-import { useRef, useEffect } from 'react'
+'use client';
+
+import { useRef, useEffect, Suspense, lazy } from 'react';
+import { registerAllModules } from 'handsontable/registry';
+import 'handsontable/dist/handsontable.full.min.css';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 // Register all Handsontable modules
-registerAllModules()
+registerAllModules();
+
+// Lazy-load HotTable
+const HotTable = lazy(() => import('@handsontable/react'));
 
 const HandsontableComponent = ({ data, fetchLogsLoading, fetchLogsError }) => {
-  // console.log('received Data', data)
-  const hotRef = useRef(null)
-  const headers = ['Host Name', 'User', 'Date', 'Event', 'Path', 'Size', 'IP', 'Message']
+  const hotRef = useRef(null);
+  const headers = ['Host Name', 'User', 'Date', 'Event', 'Path', 'Size', 'IP', 'Message'];
 
   useEffect(() => {
     if (hotRef.current) {
-      const hot = hotRef.current.hotInstance
-      const customBordersPlugin = hot.getPlugin('customBorders')
-      customBordersPlugin.clearBorders() // Clear all custom borders
+      const hot = hotRef.current.hotInstance;
+      const customBordersPlugin = hot.getPlugin('customBorders');
+      customBordersPlugin.clearBorders(); // Clear all custom borders
     }
-  }, [])
+  }, []);
 
   // Custom renderer to add title attribute for hover tooltip
   const customRenderer = (instance, td, row, col, prop, value, cellProperties) => {
-    td.innerText = value // Set the cell content
-    td.title = value // Set the title attribute for hover tooltip
-    return td
-  }
+    td.innerText = value; // Set the cell content
+    td.title = value; // Set the title attribute for hover tooltip
+    return td;
+  };
 
   // Remove the folder ID column from display
-  const displayData = data.map(row => row.slice(0, -1))
+  const displayData = data ? data.map(row => row.slice(0, -1)) : [];
 
   // Get the current screen height and set table height accordingly
-  const tableHeight = typeof window !== 'undefined' ? window.innerHeight - 200 : 600 // 200px offset for header/footer
+  const tableHeight = typeof window !== 'undefined' ? window.innerHeight - 200 : 600; // 200px offset for header/footer
+
+  // Display error if fetchLogsError exists
+  if (fetchLogsError) {
+    return (
+      <Alert variant="destructive" className="m-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{fetchLogsError.message || 'Failed to load data. Please try again.'}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Display loading skeleton if fetchLogsLoading is true
+  if (fetchLogsLoading) {
+    return (
+      <div className="flex flex-col space-y-3 p-4">
+        <Skeleton className="h-12 w-full rounded-md" />
+        <Skeleton className="h-12 w-full rounded-md" />
+        <Skeleton className="h-12 w-full rounded-md" />
+        <Skeleton className="h-[400px] w-full rounded-md" />
+      </div>
+    );
+  }
 
   return (
     <>
-      <HotTable
-        ref={hotRef}
-        data={displayData}
-        colHeaders={headers}
-        filters={true}
-        dropdownMenu={{
-          items: {
-            filter_by_condition: {
-              name: 'Filter by condition',
+      <Suspense
+        fallback={
+          <div className="flex flex-col space-y-3 p-4">
+            <Skeleton className="h-12 w-full rounded-md" />
+            <Skeleton className="h-12 w-full rounded-md" />
+            <Skeleton className="h-[400px] w-full rounded-md" />
+          </div>
+        }
+      >
+        <HotTable
+          ref={hotRef}
+          data={displayData}
+          colHeaders={headers}
+          filters={true}
+          dropdownMenu={{
+            items: {
+              filter_by_condition: {
+                name: 'Filter by condition',
+              },
+              filter_operators: {
+                name: 'Filter operators',
+                hidden: true,
+              },
+              filter_by_value: {
+                name: 'Filter by value',
+              },
+              filter_action_bar: {
+                name: 'Filter action bar',
+              },
             },
-            filter_operators: {
-              name: 'Filter operators',
-              hidden: true,
-            },
-            filter_by_value: {
-              name: 'Filter by value',
-            },
-            filter_action_bar: {
-              name: 'Filter action bar',
-            },
-          },
-        }}
-        rowHeaders={false}
-        width="100%"
-        height={tableHeight}
-        stretchH="all"
-        licenseKey="non-commercial-and-evaluation"
-        customBorders={true}
-        cells={(row, col) => ({
-          renderer: customRenderer, // Apply the custom renderer to all cells
-        })}
-      />
+          }}
+          rowHeaders={false}
+          width="100%"
+          height={tableHeight}
+          stretchH="all"
+          licenseKey="non-commercial-and-evaluation"
+          customBorders={true}
+          cells={(row, col) => ({
+            renderer: customRenderer, // Apply the custom renderer to all cells
+          })}
+        />
+      </Suspense>
       <style jsx global>{`
         .handsontable .htCore td,
         .handsontable .htCore th {
@@ -108,7 +147,7 @@ const HandsontableComponent = ({ data, fetchLogsLoading, fetchLogsError }) => {
         }
       `}</style>
     </>
-  )
-}
+  );
+};
 
-export default HandsontableComponent
+export default HandsontableComponent;

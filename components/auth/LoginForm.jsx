@@ -1,54 +1,54 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { Eye, EyeOff } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Eye, EyeOff } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
-} from '@/components/ui/form'
-import { formVariants, inputVariants } from '@/lib/animations'
+  FormMessage,
+} from '@/components/ui/form';
+import { formVariants, inputVariants } from '@/lib/animations';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z
     .string()
-    .min(8, { message: 'Password must be at least 8 characters' }), // Updated to match backend
-  rememberMe: z.boolean().optional()
-})
+    .min(8, { message: 'Password must be at least 8 characters' }),
+  rememberMe: z.boolean().optional(),
+});
 
-export default function LoginForm() {
-  const router = useRouter()
-  const { toast } = useToast()
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false) // Added loading state
-  const [errorMessage, setErrorMessage] = useState('') // Added for error display
+export default function LoginForm(setSession) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
       password: '',
-      rememberMe: false
-    }
-  })
+      rememberMe: false,
+    },
+  });
 
   async function onSubmit(values) {
-    setIsLoading(true)
-    setErrorMessage('') // Clear previous errors
+    setIsLoading(true);
+    setErrorMessage('');
     try {
       const response = await fetch('/api/auth/signin', {
         method: 'POST',
@@ -60,101 +60,103 @@ export default function LoginForm() {
           password: values.password,
           rememberMe: values.rememberMe || false,
         }),
-      })
+      });
 
-      const contentType = response.headers.get('content-type')
-      let data
+      const contentType = response.headers.get('content-type');
+      let data;
       if (contentType && contentType.includes('application/json')) {
-        data = await response.json()
+        data = await response.json();
       } else {
-        throw new Error('Unexpected server response format')
+        throw new Error('Unexpected server response format');
       }
 
       if (!response.ok) {
-        let errorMsg = data.error || 'Invalid email or password'
+        let errorMsg = data.error || 'Invalid email or password';
         switch (response.status) {
           case 400:
-            errorMsg = data.error || 'Invalid input data provided'
-            break
+            errorMsg = data.error || 'Invalid input data provided';
+            break;
           case 401:
-            errorMsg = data.error || 'Invalid email or password'
-            break
+            errorMsg = data.error || 'Invalid email or password';
+            break;
           case 404:
-            errorMsg = 'API endpoint not found'
-            break
+            errorMsg = 'API endpoint not found';
+            break;
           case 405:
-            errorMsg = 'Method not allowed'
-            break
+            errorMsg = 'Method not allowed';
+            break;
           case 409:
-            errorMsg = data.error || 'A session conflict occurred'
-            break
+            errorMsg = data.error || 'A session conflict occurred';
+            break;
           case 500:
-            errorMsg = 'Server error occurred. Please try again later.'
-            break
+            errorMsg = 'Server error occurred. Please try again later.';
+            break;
           default:
-            errorMsg = 'An unexpected error occurred'
+            errorMsg = 'An unexpected error occurred';
         }
 
-        setErrorMessage(errorMsg)
+        setErrorMessage(errorMsg);
         toast({
           title: 'Login Failed',
           description: errorMsg,
           variant: 'destructive',
-          duration: 5000
-        })
-        return
+          duration: 5000,
+        });
+        return;
       }
 
-      // Store session token (could use localStorage or cookies based on rememberMe)
+      // Store session token
       if (values.rememberMe) {
-        localStorage.setItem('sessionToken', data.sessionToken)
+        localStorage.setItem('sessionToken', data.sessionToken);
+        document.cookie = `sessionToken=${data.sessionToken}; path=/; max-age=2592000`; // 30 days
       } else {
-        sessionStorage.setItem('sessionToken', data.sessionToken)
+        sessionStorage.setItem('sessionToken', data.sessionToken);
+        document.cookie = `sessionToken=${data.sessionToken}; path=/`; // Session cookie
       }
 
       toast({
         title: 'Login Successful',
         description: data.message || 'Welcome back to Active Solutions!',
         variant: 'success',
-        duration: 3000
-      })
+        duration: 3000,
+      });
 
-      router.push('/dashboard')
+      router.push('/dashboard');
     } catch (error) {
-      console.error('Login error:', error)
-      const errorMsg = 'Network error. Please check your connection and try again.'
-      setErrorMessage(errorMsg)
+      console.error('Login error:', error);
+      const errorMsg = 'Network error. Please check your connection and try again.';
+      setErrorMessage(errorMsg);
       toast({
         title: 'Error',
         description: errorMsg,
         variant: 'destructive',
-        duration: 5000
-      })
+        duration: 5000,
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
   return (
     <motion.div
       variants={formVariants}
-      initial='hidden'
-      animate='visible'
-      className='w-full'
+      initial="hidden"
+      animate="visible"
+      className="w-full"
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <motion.div variants={inputVariants}>
             <FormField
               control={form.control}
-              name='email'
+              name="email"
               render={({ field }) => (
-                <FormItem className='border-[2px] rounded-[5px] border-[#0B97F9] custom-border-radius'>
-                  <FormLabel className='text-gray-700 ms-2'>Email</FormLabel>
+                <FormItem className="border-[2px] rounded-[5px] border-[#0B97F9] custom-border-radius">
+                  <FormLabel className="text-gray-700 ms-2">Email</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder='your@email.com'
-                      className='h-12 bg-transparent border-none focus:border-none focus:outline-none focus:ring-0 outline-none ring-0 shadow-none focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none no-border'
+                      placeholder="your@email.com"
+                      className="h-12 bg-transparent border-none focus:border-none focus:outline-none focus:ring-0 outline-none ring-0 shadow-none focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none no-border"
                       {...field}
                       disabled={isLoading}
                     />
@@ -196,30 +198,26 @@ export default function LoginForm() {
           <motion.div variants={inputVariants}>
             <FormField
               control={form.control}
-              name='password'
+              name="password"
               render={({ field }) => (
-                <FormItem className='border-[2px] rounded-[5px] border-[#0B97F9] custom-border-radius'>
-                  <FormLabel className='text-gray-700 ms-2'>Password</FormLabel>
+                <FormItem className="border-[2px] rounded-[5px] border-[#0B97F9] custom-border-radius">
+                  <FormLabel className="text-gray-700 ms-2">Password</FormLabel>
                   <FormControl>
-                    <div className='relative'>
+                    <div className="relative">
                       <Input
                         type={showPassword ? 'text' : 'password'}
-                        placeholder='••••••••••••'
-                        className='h-12 bg-transparent border-none focus:border-none focus:ring-0 outline-none pr-10 no-border'
+                        placeholder="••••••••••••"
+                        className="h-12 bg-transparent border-none focus:border-none focus:ring-0 outline-none pr-10 no-border"
                         {...field}
                         disabled={isLoading}
                       />
                       <button
-                        type='button'
-                        className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700'
+                        type="button"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                         onClick={() => setShowPassword(!showPassword)}
                         disabled={isLoading}
                       >
-                        {showPassword ? (
-                          <EyeOff size={20} />
-                        ) : (
-                          <Eye size={20} />
-                        )}
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
                     </div>
                   </FormControl>
@@ -230,41 +228,40 @@ export default function LoginForm() {
           </motion.div>
 
           <motion.div
-            className='flex items-center justify-between'
+            className="flex items-center justify-between"
             variants={inputVariants}
           >
             <FormField
               control={form.control}
-              name='rememberMe'
+              name="rememberMe"
               render={({ field }) => (
-                <FormItem className='flex h-5 items-center justify-center space-x-2'>
+                <FormItem className="flex h-5 items-center justify-center space-x-2">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
-                      className='h-5 w-5 text-blue-500 border-2 border-blue-500 rounded focus:ring-blue-500 focus:ring-offset-0 focus:ring-offset-transparent'
+                      className="h-5 w-5 text-blue-500 border-2 border-blue-500 rounded focus:ring-blue-500 focus:ring-offset-0 focus:ring-offset-transparent"
                       disabled={isLoading}
                     />
                   </FormControl>
-                  <FormLabel className='text-sm font-normal pb-2 text-gray-700 cursor-pointer leading-none flex items-center'>
+                  <FormLabel className="text-sm font-normal pb-2 text-gray-700 cursor-pointer leading-none flex items-center">
                     Remember me
                   </FormLabel>
                 </FormItem>
               )}
             />
             <Link
-              href='/forgot-password'
-              className='text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors'
+              href="/forgot-password"
+              className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
             >
               Forgot Password?
             </Link>
           </motion.div>
 
-          {/* Error display area before buttons */}
           {errorMessage && (
             <motion.div
               variants={inputVariants}
-              className='text-sm text-red-600 font-medium'
+              className="text-sm text-red-600 font-medium"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
@@ -272,21 +269,21 @@ export default function LoginForm() {
             </motion.div>
           )}
 
-          <div className='flex items-start gap-2 w-full'>
-            <motion.div variants={inputVariants} className='pt-2'>
+          <div className="flex items-start gap-2 w-full">
+            <motion.div variants={inputVariants} className="pt-2">
               <Button
-                type='submit'
-                className='w-[135px] h-[45px] bg-blue-500 hover:bg-blue-600 text-lg'
+                type="submit"
+                className="w-[135px] h-[45px] bg-blue-500 hover:bg-blue-600 text-lg"
                 disabled={isLoading}
               >
                 {isLoading ? 'Logging In...' : 'Login'}
               </Button>
             </motion.div>
-            <motion.div variants={inputVariants} className='pt-2'>
-              <Link href='/signup'>
+            <motion.div variants={inputVariants} className="pt-2">
+              <Link href="/signup">
                 <Button
-                  type='button'
-                  className='w-[160px] h-[45px] bg-transparent border-2 text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white text-lg'
+                  type="button"
+                  className="w-[160px] h-[45px] bg-transparent border-2 text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white text-lg"
                   disabled={isLoading}
                 >
                   Signup
@@ -297,5 +294,5 @@ export default function LoginForm() {
         </form>
       </Form>
     </motion.div>
-  )
+  );
 }

@@ -59,19 +59,19 @@ export function AddFolderModal() {
 
   // Debug devices and selected device
   useEffect(() => {
-    console.log('Devices:', devices);
-    console.log('Selected device:', device, devices.find((d) => d.host_name === device));
+    //console.log('Devices:', devices);
+    //console.log('Selected device:', device, devices.find((d) => d.host_name === device));
   }, [devices, device]);
 
   const handleEditDevice = (device, event) => {
     event.stopPropagation();
-    console.log('Edit device:', device);
+    //console.log('Edit device:', device);
     alert(`Edit ${device.host_name} - Implement your edit logic here`);
   };
 
   const handleDeleteDevice = (device, event) => {
     event.stopPropagation();
-    console.log('Delete device:', device);
+    //console.log('Delete device:', device);
     if (confirm(`Are you sure you want to delete ${device.host_name}?`)) {
       alert(`Delete ${device.host_name} - Implement your delete logic here`);
     }

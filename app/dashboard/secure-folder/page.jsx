@@ -12,6 +12,7 @@ export default function FolderReportsPage () {
   const [filteredTableData, setFilteredTableData] = useState([])
   const [fetchFolderLoading, setFetchFolderLoading] = useState(false)
   const [fetchFolderError, setFetchFolderError] = useState(null)
+  // const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const getFolders = async () => {
@@ -19,6 +20,7 @@ export default function FolderReportsPage () {
       try {
         const foldersData = await fetchSecureFolders()
         setFolders(foldersData)
+        // console.log('foldersData', foldersData)
       } catch (error) {
         setFetchFolderError(error.message)
       } finally {
@@ -37,7 +39,7 @@ export default function FolderReportsPage () {
     const getLogs = async () => {
       try {
         const allLogs = await FetchAllLogs()
-        console.log('allLogs', allLogs)
+        // console.log('allLogs', allLogs)
         setFetchedLogs(allLogs)
       } catch (error) {
         setFetchLogEror(error.message)
@@ -54,10 +56,12 @@ export default function FolderReportsPage () {
     } else {
       setFilteredTableData(
         fetchedLogs.filter(row =>
-          String(row[4]).toLowerCase().includes(String(selectedFolder).toLowerCase())
+          String(row[4])
+            .toLowerCase()
+            .includes(String(selectedFolder).toLowerCase())
         )
       )
-      console.log('selected Folder', selectedFolder)
+      // console.log('selected Folder', selectedFolder)
     }
   }, [selectedFolder, fetchedLogs]) // 👈 Add `fetchedLogs` here
 
@@ -76,7 +80,7 @@ export default function FolderReportsPage () {
               />
             </div>
           </div>
-          <AddFolderModal   />
+          <AddFolderModal />
         </div>
         <HandsontableComponent
           data={filteredTableData}

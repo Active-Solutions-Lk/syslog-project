@@ -1,11 +1,12 @@
-
 import React from 'react'
 import { motion, useInView } from 'framer-motion'
 import Image from 'next/image'
+import { useSession } from '@/context/SessionContext'
 
-export default function GreetingSection({ itemVariants }) {
+export default function GreetingSection ({ itemVariants }) {
   const greetingRef = React.useRef(null)
   const inViewGreeting = useInView(greetingRef, { once: true })
+  const { adminDetails, isLoading } = useSession()
 
   return (
     <motion.div
@@ -17,7 +18,14 @@ export default function GreetingSection({ itemVariants }) {
     >
       <div className='flex items-center justify-between ps-4'>
         <div>
-          <h1 className='text-xl font-bold text-gray-800'>Hi, Shaheer</h1>
+          <h1 className='text-xl font-bold text-gray-800'>
+            Hi,{' '}
+            {isLoading
+              ? 'Loading...'
+              : adminDetails
+              ? adminDetails.name
+              : 'Guest'}
+          </h1>
           <p className='text-sm text-gray-600 mt-1'>
             Ready to see what's happening on your devices?
           </p>

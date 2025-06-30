@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 
 const Logo = ({ height = 200, width = 200 }) => {
-    var logoUrl = '/images/logo.png'
+  var logoUrl = '/images/logo.png'
   return (
     <motion.div
       className="flex items-center"
@@ -12,13 +12,20 @@ const Logo = ({ height = 200, width = 200 }) => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <Image src={logoUrl} alt="Logo" width={width} height={height} className="mr-2" />
+      <Image 
+        src={logoUrl} 
+        alt="Logo" 
+        width={width} 
+        height={height} 
+        className="mr-2"
+        style={{ width: "auto", height: "auto" }}
+      />
     </motion.div>
   );
 };
 
 const LogoFill = ({ height = 150, width = 150 }) => {
-     var logoUrl = '/images/color-logo.png'
+  var logoUrl = '/images/color-logo.png'
   return (
     <motion.div
       className="flex items-center"
@@ -26,7 +33,14 @@ const LogoFill = ({ height = 150, width = 150 }) => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <Image src={logoUrl} alt="Logo" width={width} height={height} className="mr-2" />
+      <Image 
+        src={logoUrl} 
+        alt="Logo" 
+        width={width} 
+        height={height} 
+        className="mr-2"
+        style={{ width: "auto", height: "auto" }}
+      />
     </motion.div>
   );
 };

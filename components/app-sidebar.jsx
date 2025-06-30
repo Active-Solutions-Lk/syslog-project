@@ -64,12 +64,12 @@ export function AppSidebar () {
       href: '/dashboard/user-summary',
       color: 'text-primary-customized'
     },
-    {
-      title: 'System Log',
-      icon: MonitorCog,
-      href: '/dashboard/system-log',
-      color: 'text-primary-customized'
-    },
+    // {
+    //   title: 'System Log',
+    //   icon: MonitorCog,
+    //   href: '/dashboard/system-log',
+    //   color: 'text-primary-customized'
+    // },
     {
       title: 'Settings',
       icon: Settings,

@@ -53,15 +53,12 @@ export async function fetchLogMirrorData ({
 }) {
   try {
     // Fetch file types mapping from /api/file-types
-    const fileTypeResponse = await fetch('/api/file-types', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
+    const fileTypeResponse = await fetch('/api/file-types') // Use GET method
     if (!fileTypeResponse.ok) {
       throw new Error('Failed to fetch file types')
     }
+
+    // Parse response as JSON
     const { extensionToCategory } = await fileTypeResponse.json()
     console.log('Extension to category mapping:', extensionToCategory)
 
@@ -161,7 +158,7 @@ export async function fetchLogMirrorData ({
           .filter(Boolean)
       )
     ]
-    console.log('Unique file extensions:', fileExtensions)  
+    console.log('Unique file extensions:', fileExtensions)
 
     // Map extensions to categories
     const fileCategories = [

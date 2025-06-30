@@ -44,13 +44,17 @@ model log_mirror {
 }
 
 model devices {
-  id             Int              @id @default(autoincrement())
-  host_name      String           @unique(map: "host_name") @db.VarChar(255)
-  status         String?          @default("active") @db.VarChar(50)
-  created_at     DateTime         @db.DateTime(0)
-  updated_at     DateTime         @db.DateTime(0)
-  log_mirror     log_mirror[]
-  secure_folders secure_folders[]
+  id                Int                 @id @default(autoincrement())
+  host_name         String              @unique(map: "host_name") @db.VarChar(255)
+  status            String?             @default("active") @db.VarChar(50)
+  port              Int
+  ip                String              @db.VarChar(100)
+  created_at        DateTime            @db.DateTime(0)
+  updated_at        DateTime            @db.DateTime(0)
+  device_file_types device_file_types[]
+  log_mirror        log_mirror[]
+  secure_folders    secure_folders[]
+  work_time         work_time[]
 }
 
 model users {
@@ -88,10 +92,14 @@ model session {
 }
 
 model file_types {
-  id        Int    @id @default(autoincrement())
-  name      String @db.VarChar(50)
-  extension String @db.Text
-  allow     Int    @db.TinyInt
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(50)
+  extension         String              @db.Text
+  allow             Int                 @db.TinyInt
+  max_size          Int
+  created_at        DateTime            @default(now()) @db.Timestamp(0)
+  updated_at        DateTime            @default(now()) @db.Timestamp(0)
+  device_file_types device_file_types[]
 }
 
 model secure_folders {
@@ -102,6 +110,31 @@ model secure_folders {
   created_at DateTime @default(now()) @db.Timestamp(0)
   updated_at DateTime @default(now()) @db.Timestamp(0)
   devices    devices  @relation(fields: [device_id], references: [id], onDelete: Cascade, map: "fk_deviceId_device")
+
+  @@index([device_id], map: "device_id")
+}
+
+model device_file_types {
+  device_id    Int
+  file_type_id Int
+  max_size     Float      @db.Float
+  allow        Int        @db.TinyInt
+  devices      devices    @relation(fields: [device_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "device_file_types_ibfk_1")
+  file_types   file_types @relation(fields: [file_type_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "device_file_types_ibfk_2")
+
+  @@id([device_id, file_type_id])
+  @@index([file_type_id], map: "file_type_id")
+}
+
+model work_time {
+  id         Int      @id @default(autoincrement())
+  device_id  Int
+  period     String   @db.Text
+  from       DateTime @db.Time(0)
+  to         DateTime @db.Time(0)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+  devices    devices  @relation(fields: [device_id], references: [id], onDelete: Cascade, map: "fk_deviceId_devices")
 
   @@index([device_id], map: "device_id")
 }
