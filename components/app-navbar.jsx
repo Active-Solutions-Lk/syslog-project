@@ -52,7 +52,7 @@ const AppNavbar = () => {
                 <AvatarImage src="/images/dp.jpeg" alt="User" className="h-8 w-8 rounded-full" />
               </Avatar>
               <span className="font-medium text-subtitle text-sm">
-                {isLoading ? 'Loading...' : adminDetails ? adminDetails.name : 'Guest'}
+                {isLoading ? 'Loading...' : adminDetails ? adminDetails.name : 'Loading...'}
               </span>
               <ChevronDown className="h-4 w-4" />
             </div>

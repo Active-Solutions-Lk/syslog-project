@@ -103,6 +103,9 @@ export async function getProcessedUserSummaries () {
       const category = categoryTranslation[rawCategory] || 'Other'
       const size = parseFileSize(log.size)
 
+
+      console.log('extension category',extensionToCategory )
+
       // //console.log('Processing log:', {
       //   message: log.message,
       //   extractedPath,

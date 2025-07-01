@@ -24,7 +24,7 @@ export default function GreetingSection ({ itemVariants }) {
               ? 'Loading...'
               : adminDetails
               ? adminDetails.name
-              : 'Guest'}
+              : 'Loading...'}
           </h1>
           <p className='text-sm text-gray-600 mt-1'>
             Ready to see what's happening on your devices?
