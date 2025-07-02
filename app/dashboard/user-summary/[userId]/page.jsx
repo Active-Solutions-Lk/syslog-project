@@ -23,7 +23,7 @@ import { FetchSummary } from './server-side'
 export default function UserDetailPage({ params }) {
   const unwrappedParams = React.use(params)
   const { userId } = unwrappedParams
-  console.log('User ID from params:', userId)
+  //console.log('User ID from params:', userId)
   const searchParams = useSearchParams()
   const fileType = searchParams.get('fileType')
   const router = useRouter()
@@ -45,7 +45,7 @@ export default function UserDetailPage({ params }) {
       setFetchingLoading(true)
       try {
         const receivedData = await FetchSummary(Number(userId))
-        console.log('Fetched user summary data:', receivedData)
+        //console.log('Fetched user summary data:', receivedData)
         setUserSummaryData(receivedData)
         if (!fileType && receivedData.length > 0) {
           const firstUser = receivedData.find(u => u.id === Number(userId))
@@ -102,7 +102,7 @@ export default function UserDetailPage({ params }) {
     ? selectedUserData.fileTypes.find(f => f.type === decodeURIComponent(selectedFileType))
     : null
 
-  console.log('Selected file type data:', selectedFileTypeData)
+  //console.log('Selected file type data:', selectedFileTypeData)
 
   const uploads = selectedFileTypeData ? selectedFileTypeData.uploads : []
   const downloads = selectedFileTypeData ? selectedFileTypeData.downloads : []
@@ -148,7 +148,7 @@ export default function UserDetailPage({ params }) {
   const filteredUsers = userSummaryData.filter(u =>
     u.name.toLowerCase().includes(userSearch.toLowerCase())
   )
-  console.log('Filtered users:', filteredUsers)
+  //console.log('Filtered users:', filteredUsers)
 
   const filteredFileTypes = user ? user.fileTypes.filter(f =>
     f.type.toLowerCase().includes(fileTypeSearch.toLowerCase())

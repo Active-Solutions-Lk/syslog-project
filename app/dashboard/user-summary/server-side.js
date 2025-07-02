@@ -14,13 +14,17 @@ export async function getProcessedUserSummaries () {
     const users = usersData.data
     const devices = devicesData.data
     const logs = logsData.data
-    const extensionToCategory = fileTypeData.extensionToCategory || {}
+    const extensionToCategory = {}
+    fileTypeData.forEach(entry => {
+      if (entry.extension && entry.name) {
+        extensionToCategory[entry.extension.toLowerCase()] = entry.name
+      }
+    })
 
-
-    //console.log('fileTypeData', fileTypeData?.extension);
+    // console.log('fileTypeData', fileTypeData);
 
     // // Debug: confirm data fetched
-    // //console.log('Fetched data:', {
+    // console.log('Fetched data:', {
     //   users: users.length,
     //   devices: devices.length,
     //   logs: logs.length,
@@ -92,7 +96,7 @@ export async function getProcessedUserSummaries () {
       // ✅ Now count this log as a "valid file"
       userObj.totalFiles += 1
 
-      if (log.event === 'upload' || log.event === 'copy') userObj.created += 1
+      if (log.event === 'upload') userObj.created += 1
       if (log.event === 'delete') userObj.deleted += 1
 
       if (!userObj.folderId && log.hostname) {
@@ -103,8 +107,9 @@ export async function getProcessedUserSummaries () {
       const category = categoryTranslation[rawCategory] || 'Other'
       const size = parseFileSize(log.size)
 
+      console.log('logsize', log.size, 'parsed size', size)
 
-      console.log('extension category',extensionToCategory )
+      // console.log('extension category', extensionToCategory)
 
       // //console.log('Processing log:', {
       //   message: log.message,
@@ -119,10 +124,10 @@ export async function getProcessedUserSummaries () {
       const fileTypeStats =
         userObj.fileTypes[category] || userObj.fileTypes.Other
 
-      if (log.event === 'upload' || log.event === 'copy')
+      if (log.event === 'upload')
         fileTypeStats.createCount += 1
       else if (log.event === 'delete') fileTypeStats.deleteCount += 1
-      else if (log.event === 'read') fileTypeStats.readCount += 1
+      else if (log.event === 'download') fileTypeStats.readCount += 1
 
       fileTypeStats.totalSize += size
       userObj.totalSizeBytes += size
@@ -132,6 +137,7 @@ export async function getProcessedUserSummaries () {
     const finalUsers = []
 
     for (const user of userMap.values()) {
+      console.log('user', user)
       finalUsers.push({
         id: user.id,
         name: user.name,

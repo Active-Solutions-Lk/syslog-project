@@ -21,6 +21,7 @@ import {
   FormMessage
 } from '@/components/ui/form'
 import { formVariants, inputVariants } from '@/lib/animations'
+import { signupUser } from '@/lib/actions/user';
 
 const formSchema = z
   .object({
@@ -29,6 +30,10 @@ const formSchema = z
       .string()
       .min(2, { message: 'Company name must be at least 2 characters' }),
     email: z.string().email({ message: 'Please enter a valid email address' }),
+    activationKey: z.string().regex(/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/, {
+      message: 'Activation key must be in the format XXXX-XXXX-XXXX'
+    }),
+
     password: z
       .string()
       .min(8, { message: 'Password must be at least 8 characters' }), // Updated to match backend validation
@@ -39,7 +44,7 @@ const formSchema = z
     path: ['confirmPassword']
   })
 
-export default function SignupForm() {
+export default function SignupForm () {
   const router = useRouter()
   const { toast } = useToast()
   const [showPassword, setShowPassword] = useState(false)
@@ -52,160 +57,55 @@ export default function SignupForm() {
       name: '',
       company: '',
       email: '',
+      activationKey: '',
       password: '',
       confirmPassword: ''
     }
   })
 
-  async function onSubmit(values) {
-    setIsLoading(true)
-    try {
-      const { confirmPassword, ...payload } = values // Exclude confirmPassword
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
 
-      let data
-      const contentType = response.headers.get('content-type')
-      if (contentType && contentType.includes('application/json')) {
-        data = await response.json()
-      } else {
-        throw new Error('Unexpected server response format')
-      }
-
-      if (!response.ok) {
-        let errorMessage = data.error || 'Unable to create account'
-        let variant = 'destructive'
-
-        // Handle specific status codes
-        switch (response.status) {
-          case 400:
-            errorMessage = data.error || 'Invalid input data provided'
-            break
-          case 409:
-            errorMessage = data.error || 'A user with this email already exists'
-            break
-          case 404:
-            errorMessage = 'API endpoint not found'
-            break
-          case 405:
-            errorMessage = 'Method not allowed'
-            break
-          case 500:
-            errorMessage = 'Server error occurred. Please try again later.'
-            break
-          default:
-            errorMessage = 'An unexpected error occurred'
-        }
-
-        toast({
-          title: 'Sign-up Failed',
-          description: errorMessage,
-          variant: variant,
-          duration: 5000
-        })
-        return
-      }
-
-      // Success case
-      toast({
-        title: 'Sign-up Successful',
-        description: data.message || 'Welcome to Active Solutions!',
-        variant: 'success',
-        duration: 3000
-      })
-      router.push('/dashboard')
-    } catch (error) {
-      console.error('Sign-up error:', error)
-      toast({
-        title: 'Error',
-        description: 'Network error. Please check your connection and try again.',
-        variant: 'destructive',
-        duration: 5000
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   // State to hold server error message
   const [serverError, setServerError] = useState('')
 
-  async function onSubmit(values) {
-    setIsLoading(true)
-    setServerError('') // Reset error before submit
-    try {
-      const { confirmPassword, ...payload } = values
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
+async function onSubmit(values) {
+  setIsLoading(true);
+  setServerError(""); // Reset error before submit
+  try {
+    const { confirmPassword, ...payload } = values; // Exclude confirmPassword
+    const result = await signupUser(payload);
 
-      let data
-      const contentType = response.headers.get('content-type')
-      if (contentType && contentType.includes('application/json')) {
-        data = await response.json()
-      } else {
-        throw new Error('Unexpected server response format')
-      }
-
-      if (!response.ok) {
-        let errorMessage = data.error || 'Unable to create account'
-        let variant = 'destructive'
-
-        switch (response.status) {
-          case 400:
-            errorMessage = data.error || 'Invalid input data provided'
-            break
-          case 409:
-            errorMessage = data.error || 'A user with this email already exists'
-            break
-          case 404:
-            errorMessage = 'API endpoint not found'
-            break
-          case 405:
-            errorMessage = 'Method not allowed'
-            break
-          case 500:
-            errorMessage = 'Server error occurred. Please try again later.'
-            break
-          default:
-            errorMessage = 'An unexpected error occurred'
-        }
-
-        setServerError(errorMessage) // Set error for display
-        toast({
-          title: 'Sign-up Failed',
-          description: errorMessage,
-          variant: variant,
-          duration: 5000
-        })
-        return
-      }
-
+    if (!result.success) {
+      setServerError(result.error);
       toast({
-        title: 'Sign-up Successful',
-        description: data.message || 'Welcome to Active Solutions!',
-        variant: 'success',
-        duration: 3000
-      })
-      router.push('/dashboard')
-    } catch (error) {
-      console.error('Sign-up error:', error)
-      setServerError('Network error. Please check your connection and try again.')
-      toast({
-        title: 'Error',
-        description: 'Network error. Please check your connection and try again.',
-        variant: 'destructive',
-        duration: 5000
-      })
-    } finally {
-      setIsLoading(false)
+        title: "Sign-up Failed",
+        description: result.error,
+        variant: "destructive",
+        duration: 5000,
+      });
+      return;
     }
+
+    toast({
+      title: "Sign-up Successful",
+      description: result.message,
+      variant: "success",
+      duration: 3000,
+    });
+    router.push("/dashboard");
+  } catch (error) {
+    console.error("Sign-up error:", error);
+    setServerError("Unexpected error occurred. Please try again.");
+    toast({
+      title: "Error",
+      description: "Unexpected error occurred. Please try again.",
+      variant: "destructive",
+      duration: 5000,
+    });
+  } finally {
+    setIsLoading(false);
   }
+}
 
   return (
     <motion.div
@@ -316,6 +216,29 @@ export default function SignupForm() {
           <motion.div variants={inputVariants}>
             <FormField
               control={form.control}
+              name='activationKey'
+              render={({ field }) => (
+                <FormItem className='border-2 border-blue-500 rounded-md p-1 custom-border-radius'>
+                  <FormLabel className='text-xs ms-2 text-gray-700'>
+                    Activation Key
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder='1A2B-3C4D-5E6F'
+                      className='h-5 bg-transparent border-none focus:border-none focus:outline-none focus:ring-0 outline-none ring-0 shadow-none focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none no-border text-sm'
+                      {...field}
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <FormMessage className='text-xs' />
+                </FormItem>
+              )}
+            />
+          </motion.div>
+
+          <motion.div variants={inputVariants}>
+            <FormField
+              control={form.control}
               name='password'
               render={({ field }) => (
                 <FormItem className='border-2 border-blue-500 rounded-md p-1 custom-border-radius'>
@@ -372,7 +295,9 @@ export default function SignupForm() {
                       <button
                         type='button'
                         className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700'
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
                         disabled={isLoading}
                       >
                         {showConfirmPassword ? (
@@ -400,7 +325,6 @@ export default function SignupForm() {
               {serverError}
             </motion.div>
           )}
-
 
           <div className='flex space-x-4 mt-4'>
             <motion.div variants={inputVariants} className='w-1/3'>

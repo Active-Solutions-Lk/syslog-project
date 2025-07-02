@@ -14,8 +14,8 @@ export default function FileTypeTable({ fileTypes, onRowClick }) {
       <TableHeader className='bg-specialbg bg-opacity-35 text-lg'>
         <TableRow className='text-md '>
           <TableHead className='text-title p-2 px-4'>File Type</TableHead>
-          <TableHead className='text-title text-start'>Create Count</TableHead>
-          <TableHead className='text-title text-start'>Read Count</TableHead>
+          <TableHead className='text-title text-start'>Upload Count</TableHead>
+          <TableHead className='text-title text-start'>Download Count</TableHead>
           <TableHead className='text-title text-start'>Delete Count</TableHead>
           <TableHead className='text-title text-start'>Total Size (GB)</TableHead>
         </TableRow>

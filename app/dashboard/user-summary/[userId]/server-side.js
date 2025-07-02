@@ -28,7 +28,7 @@ export async function FetchSummary (userId) {
     if (!response.ok) throw new Error('API Endpoint Not Ok')
 
     const logs = await response.json()
-    console.log('Fetched logs:', logs)
+    //console.log('Fetched logs:', logs)
 
     // Step 3: Process logs and group by user
     const usersMap = {}
@@ -46,7 +46,7 @@ export async function FetchSummary (userId) {
     logs.forEach(log => {
       const uId = log.users?.id
       if (!uId) {
-        console.log('Skipping log: missing user ID', log)
+        //console.log('Skipping log: missing user ID', log)
         return
       }
 
@@ -100,15 +100,15 @@ export async function FetchSummary (userId) {
         path: filePath
       }
 
-      console.log('Processing log:', {
-        uId,
-        event: log.event,
-        fileName,
-        extension,
-        rawCategory,
-        category,
-        sizeInBytes
-      })
+      // console.log('Processing log:', {
+      //   uId,
+      //   event: log.event,
+      //   fileName,
+      //   extension,
+      //   rawCategory,
+      //   category,
+      //   sizeInBytes
+      // })
 
       // Categorize by event type
       if (log.event === 'create' || log.event === 'upload') {
@@ -139,7 +139,7 @@ export async function FetchSummary (userId) {
       }))
     }))
 
-    console.log('Formatted users:', users)
+    //console.log('Formatted users:', users)
     return users
   } catch (error) {
     console.error('FetchSummary error:', error)
