@@ -21,6 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { formVariants, inputVariants } from '@/lib/animations';
+import { loginUser } from '@/lib/actions/user';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -30,7 +31,7 @@ const formSchema = z.object({
   rememberMe: z.boolean().optional(),
 });
 
-export default function LoginForm(setSession) {
+export default function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
@@ -50,55 +51,13 @@ export default function LoginForm(setSession) {
     setIsLoading(true);
     setErrorMessage('');
     try {
-      const response = await fetch('/api/auth/signin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: values.email,
-          password: values.password,
-          rememberMe: values.rememberMe || false,
-        }),
-      });
+      const response = await loginUser(values);
 
-      const contentType = response.headers.get('content-type');
-      let data;
-      if (contentType && contentType.includes('application/json')) {
-        data = await response.json();
-      } else {
-        throw new Error('Unexpected server response format');
-      }
-
-      if (!response.ok) {
-        let errorMsg = data.error || 'Invalid email or password';
-        switch (response.status) {
-          case 400:
-            errorMsg = data.error || 'Invalid input data provided';
-            break;
-          case 401:
-            errorMsg = data.error || 'Invalid email or password';
-            break;
-          case 404:
-            errorMsg = 'API endpoint not found';
-            break;
-          case 405:
-            errorMsg = 'Method not allowed';
-            break;
-          case 409:
-            errorMsg = data.error || 'A session conflict occurred';
-            break;
-          case 500:
-            errorMsg = 'Server error occurred. Please try again later.';
-            break;
-          default:
-            errorMsg = 'An unexpected error occurred';
-        }
-
-        setErrorMessage(errorMsg);
+      if (!response.success) {
+        setErrorMessage(response.error);
         toast({
           title: 'Login Failed',
-          description: errorMsg,
+          description: response.error,
           variant: 'destructive',
           duration: 5000,
         });
@@ -107,16 +66,16 @@ export default function LoginForm(setSession) {
 
       // Store session token
       if (values.rememberMe) {
-        localStorage.setItem('sessionToken', data.sessionToken);
-        document.cookie = `sessionToken=${data.sessionToken}; path=/; max-age=2592000`; // 30 days
+        localStorage.setItem('sessionToken', response.data.sessionToken);
+        document.cookie = `sessionToken=${response.data.sessionToken}; path=/; max-age=2592000`; // 30 days
       } else {
-        sessionStorage.setItem('sessionToken', data.sessionToken);
-        document.cookie = `sessionToken=${data.sessionToken}; path=/`; // Session cookie
+        sessionStorage.setItem('sessionToken', response.data.sessionToken);
+        document.cookie = `sessionToken=${response.data.sessionToken}; path=/`; // Session cookie
       }
 
       toast({
         title: 'Login Successful',
-        description: data.message || 'Welcome back to Active Solutions!',
+        description: response.message || 'Welcome back to Active Solutions!',
         variant: 'success',
         duration: 3000,
       });

@@ -26,7 +26,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { LogoFill } from './ui/Logo'
+import { LogoFill } from './ui/logo'
 import Image from 'next/image'
 
 export function AppSidebar () {
@@ -77,9 +77,9 @@ export function AppSidebar () {
       color: 'text-primary-customized',
       hasSubmenu: true,
       submenu: [
-        { title: 'Account Settings', href: '/dashboard/settings/account' },
+        // { title: 'Account Settings', href: '/dashboard/settings/account' },
         { title: 'Devices Settings', href: '/dashboard/settings/devices' },
-        { title: 'App Settings', href: '/dashboard/settings/app' }
+        // { title: 'App Settings', href: '/dashboard/settings/app' }
       ]
     }
   ]

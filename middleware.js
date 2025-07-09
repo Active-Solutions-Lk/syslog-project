@@ -1,45 +1,38 @@
-// middleware.js
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
+import {
+  validateSession,
+  validateActivationKey
+} from './lib/actions/validate-session'
 
-export async function middleware(request) {
-  // Extract sessionToken from cookies (we'll adjust for localStorage/sessionStorage later)
-  const sessionToken = request.cookies.get('sessionToken')?.value;
+export async function middleware (request) {
+  // Extract sessionToken from cookies
+  const sessionToken = request.cookies.get('sessionToken')?.value
 
   // If no sessionToken, redirect to login
   if (!sessionToken) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    return NextResponse.redirect(new URL('/login?error=Session expired. Please login again', request.url))
   }
 
-  try {
-    // Validate session token by calling the API
-    const response = await fetch(`${request.nextUrl.origin}/api/auth/session`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ sessionToken }),
-    });
+  // Validate session using the extracted function
+  const { isValid } = await validateSession(
+    sessionToken,
+    request.nextUrl.origin
+  )
+  const { isActivated,error } = await validateActivationKey(request.nextUrl.origin)
 
-    if (!response.ok) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+  // console.log('Session validation result:', isValid);
+  // console.log('Activation key validation result:', isActivated)
 
-    const data = await response.json();
-    const session = data.session;
-
-    // Check if session exists and is not expired
-    if (!session || new Date(session.expires) < new Date()) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    // Session is valid, proceed with the request
-    return NextResponse.next();
-  } catch (error) {
-    console.error('Middleware error:', error);
-    return NextResponse.redirect(new URL('/login', request.url));
+  if (!isValid || !isActivated) {
+    return NextResponse.redirect(
+      new URL(`/login?error= ${error} `, request.url)
+    )
   }
+
+  // Session is valid, proceed with the request
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*'], // Protect all routes under /dashboard
-};
+  matcher: ['/dashboard/:path*'] // Protect all routes under /dashboard
+}

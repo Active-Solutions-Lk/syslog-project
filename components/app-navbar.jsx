@@ -49,7 +49,7 @@ const AppNavbar = () => {
             <div className="flex items-center gap-3 cursor-pointer">
               <Avatar className="h-8 w-8 bg-blue-100 text-primary-customized">
                 <AvatarFallback>{adminDetails?.name ? adminDetails.name[0] : 'AS'}</AvatarFallback>
-                <AvatarImage src="/images/dp.jpeg" alt="User" className="h-8 w-8 rounded-full" />
+                <AvatarImage src="/images/dp.png" alt="User" className="h-8 w-8 rounded-full" />
               </Avatar>
               <span className="font-medium text-subtitle text-sm">
                 {isLoading ? 'Loading...' : adminDetails ? adminDetails.name : 'Loading...'}
@@ -79,7 +79,7 @@ const AppNavbar = () => {
                 <DropdownMenuItem className="flex flex-col items-start">
                   <span className="font-medium">Created At</span>
                   <span className="text-sm text-muted-foreground">
-                    {format(new Date(adminDetails.createdAt), 'MMMM dd, yyyy')}
+                    {format(new Date(adminDetails.created_at), 'MMMM dd, yyyy')}
                   </span>
                 </DropdownMenuItem>
               </>

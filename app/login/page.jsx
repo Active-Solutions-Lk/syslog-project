@@ -1,13 +1,22 @@
-"use client";
-
-import AuthLayout from "@/components/auth/AuthLayout";
-import LoginForm from "@/components/auth/LoginForm";
-import { useState } from "react";
+'use client';
+import { useSearchParams } from 'next/navigation';
+import AuthLayout from '@/components/auth/AuthLayout';
+import LoginForm from '@/components/auth/LoginForm';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const [session, setSession] = useState(null);
+  const searchParams = useSearchParams();
+  const error = searchParams.get('error');
 
-  console.log("session data", session);
+  useEffect(() => {
+    if (error) {
+      // console.log('Login error:', error); // Log the error for debugging
+      toast.error('Login failed: ' + error); // Show error toast if error exists
+    }
+  }, [error]); // Run effect when error changes
+
   return (
     <AuthLayout
       title="Login"
@@ -15,6 +24,7 @@ export default function LoginPage() {
       welcomeSubheading="Log in now to manage your device logs more efficiently and stay in full control!"
       sidePosition="left"
     >
+      
       <LoginForm setSession={setSession} />
     </AuthLayout>
   );

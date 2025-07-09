@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Facebook, Globe } from 'lucide-react'
 import { logoVariants, containerVariants, itemVariants } from '@/lib/animations'
-import Logo from '../ui/Logo'
+import Logo from '../ui/logo'
 import Image from 'next/image'
 
 export default function AuthLayout ({

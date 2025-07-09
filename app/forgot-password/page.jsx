@@ -20,7 +20,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { pageVariants, formVariants, inputVariants } from "@/lib/animations";
-import Logo from "@/components/ui/Logo";
+import Logo from "@/components/ui/logo";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),

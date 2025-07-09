@@ -85,14 +85,13 @@ async function onSubmit(values) {
       });
       return;
     }
-
     toast({
       title: "Sign-up Successful",
       description: result.message,
       variant: "success",
       duration: 3000,
     });
-    router.push("/dashboard");
+    router.push("/login");
   } catch (error) {
     console.error("Sign-up error:", error);
     setServerError("Unexpected error occurred. Please try again.");
