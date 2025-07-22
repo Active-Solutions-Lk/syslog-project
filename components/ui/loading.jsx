@@ -1,24 +1,18 @@
-// app/components/Loading.jsx
 'use client';
 import { useEffect, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 export default function Loading() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Show loading when navigating to protected routes
-    if (pathname.startsWith('/')) {
-      setIsLoading(true);
-    }
-
-    // Hide loading when navigation completes (pathname or searchParams change)
+    // Show loading initially
     setIsLoading(false);
 
-    // Optional: Add a timeout to hide loading after a maximum duration
-    const timer = setTimeout(() => setIsLoading(false), 5000); // 5 seconds max
+    // Hide loading after navigation completes
+    const timer = setTimeout(() => setIsLoading(false), 500); // 5 seconds max
     return () => clearTimeout(timer);
   }, [pathname, searchParams]);
 

@@ -183,14 +183,10 @@ export async function handler(request) {
         );
         if (!projectExists) {
           // Optionally create the project in prismaLogger if it doesn't exist
-          await prismaLogger.projects.create({
+          await prismaLogger.project_details.create({
             data: {
-              id: validatedKey.id,
-              activation_key: validatedKey.activation_key,
-              pkg_id: validatedKey.pkg_id,
-              rep: validatedKey.rep,
-              contact: validatedKey.contact,
-              company: validatedKey.company,
+              key: validatedKey.activation_key,
+              project_id: validatedKey.id,
               created_at: validatedKey.created_at,
               updated_at: validatedKey.updated_at
             }

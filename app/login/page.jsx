@@ -1,11 +1,12 @@
 'use client';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import AuthLayout from '@/components/auth/AuthLayout';
 import LoginForm from '@/components/auth/LoginForm';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
-export default function LoginPage() {
+function LoginContent() {
   const [session, setSession] = useState(null);
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
@@ -24,8 +25,15 @@ export default function LoginPage() {
       welcomeSubheading="Log in now to manage your device logs more efficiently and stay in full control!"
       sidePosition="left"
     >
-      
       <LoginForm setSession={setSession} />
     </AuthLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
